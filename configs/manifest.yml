@@ -1,0 +1,564 @@
+---
+# Namespace for the application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: browser-sandbox
+---
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: browser-sandbox
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+              name: postgres
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_DB
+              value: "sandbox_db"
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: browser-sandbox
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: browser-sandbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: browser-sandbox
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: redis
+---
+# Guacamole Server Deployment (guacd)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guacd
+  namespace: browser-sandbox
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: guacd
+  template:
+    metadata:
+      labels:
+        app: guacd
+    spec:
+      containers:
+        - name: guacd
+          image: guacamole/guacd:latest
+          ports:
+            - containerPort: 4822
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+# Guacamole Server Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: guacd
+  namespace: browser-sandbox
+spec:
+  ports:
+    - port: 4822
+      targetPort: 4822
+  type: ClusterIP
+  selector:
+    app: guacd
+---
+# MinIO Deployment for S3 Storage
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: browser-sandbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args:
+            - server
+            - /data
+          ports:
+            - containerPort: 9000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "300m"
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
+      volumes:
+        - name: minio-data
+          persistentVolumeClaim:
+            claimName: minio-pvc
+---
+# MinIO PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: browser-sandbox
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# MinIO Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: browser-sandbox
+spec:
+  ports:
+    - port: 9000
+      targetPort: 9000
+  selector:
+    app: minio
+---
+# Backend API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: browser-sandbox-api
+  namespace: browser-sandbox
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: browser-sandbox-api
+  template:
+    metadata:
+      labels:
+        app: browser-sandbox-api
+    spec:
+      serviceAccountName: browser-sandbox-sa
+      containers:
+        - name: api
+          image:  ghcr.io/browsersec/kubebrowse:tilt-381a04b674613671
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4567
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          env:
+            - name: GUACD_ADDRESS
+              value: "guacd.browser-sandbox.svc.cluster.local:4822"
+            - name: POSTGRES_HOST
+              value: "postgres"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_DB
+              value: "sandbox_db"
+            - name: REDIS_HOST
+              value: "redis.browser-sandbox.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: MINIO_ENDPOINT
+              value: "minio:9000"
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-key
+            - name: MINIO_BUCKET
+              value: "browser-sandbox"
+            - name: CLAMAV_ADDRESS
+              value: "http://clamd-api.browser-sandbox.svc.cluster.local:3000"
+            - name: KUBERNETES_NAMESPACE
+              value: "browser-sandbox"
+          securityContext: {}
+---
+# API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: browser-sandbox-api
+  namespace: browser-sandbox
+#  annotations:
+#    metallb.universe.tf/address-pool: static-ip-pool
+spec:
+  type: NodePort
+  ports:
+    - port: 4567
+      targetPort: 4567
+      nodePort: 30006
+  selector:
+    app: browser-sandbox-api
+---
+# ServiceAccount for API to access Kubernetes
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: browser-sandbox-sa
+  namespace: browser-sandbox
+---
+# Role for pod management
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-manager
+  namespace: browser-sandbox
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+---
+# RoleBinding for ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-manager-binding
+  namespace: browser-sandbox
+subjects:
+  - kind: ServiceAccount
+    name: browser-sandbox-sa
+    namespace: browser-sandbox
+roleRef:
+  kind: Role
+  name: pod-manager
+  apiGroup: rbac.authorization.k8s.io
+---
+# Modified Istio Gateway
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: browser-sandbox-gateway
+  namespace: browser-sandbox
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts: ["*"]
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts: ["*"]
+      tls:
+        mode: SIMPLE
+        credentialName: ip-certificate
+---
+# Istio VirtualService for routing
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: browser-sandbox
+  namespace: browser-sandbox
+spec:
+  hosts: ["*"]
+  gateways:
+    - browser-sandbox-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/api"
+      route:
+        - destination:
+            host: browser-sandbox-api
+            port:
+              number: 4567
+    - match:
+        - uri:
+            prefix: "/websocket-tunnel"
+      rewrite:
+        uri: "/websocket-tunnel"
+      route:
+        - destination:
+            host: browser-sandbox-api
+            port:
+              number: 4567
+    - route:  # Default route for frontend
+        - destination:
+            host: browser-sandbox-frontend
+            port:
+              number: 80
+
+---
+# Not meant for production 
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: browser-sandbox-api
+  namespace: browser-sandbox
+spec:
+  host: browser-sandbox-api
+  trafficPolicy:
+    tls:
+      mode: SIMPLE
+      # Skip certificate verification
+      insecureSkipVerify: true
+
+
+
+# ---
+# Cron Job to cleanup idle sessions
+# apiVersion: batch/v1
+# kind: CronJob
+# metadata:
+#   name: cleanup-idle-sessions
+#   namespace: browser-sandbox
+# spec:
+#   schedule: "*/5 * * * *" # Run every 5 minutes
+#   jobTemplate:
+#     spec:
+#       template:
+#         spec:
+#           serviceAccountName: browser-sandbox-sa
+#           containers:
+#             - name: cleanup
+#               image: your-registry/browser-sandbox-cleanup:latest
+#               env:
+#                 - name: POSTGRES_HOST
+#                   value: "postgres"
+#                 - name: POSTGRES_PORT
+#                   value: "5432"
+#                 - name: POSTGRES_USER
+#                   valueFrom:
+#                     secretKeyRef:
+#                       name: postgres-secret
+#                       key: username
+#                 - name: POSTGRES_PASSWORD
+#                   valueFrom:
+#                     secretKeyRef:
+#                       name: postgres-secret
+#                       key: password
+#                 - name: POSTGRES_DB
+#                   value: "sandbox_db"
+#                 - name: KUBERNETES_NAMESPACE
+#                   value: "browser-sandbox"
+#           restartPolicy: OnFailure
+---
+# Secrets (in practice, use a proper secret management solution)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: browser-sandbox
+type: Opaque
+data:
+  username: cG9zdGdyZXN1c2Vy # base64 encoded "postgresuser"
+  password: cG9zdGdyZXNwYXNzd29yZA== # base64 encoded "postgrespassword"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-secret
+  namespace: browser-sandbox
+type: Opaque
+data:
+  access-key: bWluaW9hY2Nlc3NrZXk= # base64 encoded "minioaccesskey"
+  secret-key: bWluaW9zZWNyZXRrZXk= # base64 encoded "miniosecretkey"
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: browser-sandbox-frontend
+  namespace: browser-sandbox
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "browser-sandbox-frontend"
+  template:
+    metadata:
+      labels:
+        app: "browser-sandbox-frontend"
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/browsersec/kubebrowse-frontend:sha-e331ff2444c57df72fdfc206a59a7f62f0bc924b
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          env:
+            - name: VITE_GUAC_CLIENT_URL
+              value: "https://browser-sandbox-api.browser-sandbox.svc.cluster.local:4567"
+            - name: GUAC_CLIENT_URL
+              value: "https://browser-sandbox-api.browser-sandbox.svc.cluster.local:4567"
+            - name: CADDY_GUAC_CLIENT_URL
+              value: "https://browser-sandbox-api.browser-sandbox.svc.cluster.local:4567"
+---
+# Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: browser-sandbox-frontend
+  namespace: browser-sandbox
+  annotations:
+    metallb.universe.tf/address-pool: static-ip-pool
+
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+     # nodePort: 30007
+  selector:
+    app: "browser-sandbox-frontend"
+---
+# Headless Service for individual sandbox pod discovery (browser and office)
+apiVersion: v1
+kind: Service
+metadata:
+  name: sandbox-instances
+  namespace: browser-sandbox
+spec:
+  clusterIP: None # Makes the service headless
+  selector:
+    app: browser-sandbox-test # Selects pods with label app=browser-sandbox
+  ports:
+    - name: rdp
+      port: 3389
+      targetPort: rdp # Matches the named port "rdp" (3389) in the pod spec
+---
