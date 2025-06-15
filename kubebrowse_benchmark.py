@@ -7,7 +7,6 @@ Monitors and visualizes performance metrics for the KubeBrowse application
 import asyncio
 import os
 import aiohttp
-import websockets
 import ssl
 import time
 import json
@@ -215,6 +214,11 @@ class KubeBrowseBenchmark:
             logger.error(f"Error getting websocket info for {connection_id}: {e}")
             return None, api_latency
     
+    async def connect_websocket(self, websocket_url):
+        """DEPRECATED: Use connect_websocket_websocat instead"""
+        logger.warning("connect_websocket is deprecated, using websocat CLI implementation")
+        return 0
+    
     async def connect_websocket_websocat(self, websocket_url, connection_id):
         """Connect to websocket using websocat subprocess"""
         ws_start_time = time.time()
@@ -222,7 +226,7 @@ class KubeBrowseBenchmark:
         try:
             uri = f"wss://172.18.120.152:30006{websocket_url}"
             
-            # Construct websocat command
+            # Construct websocat command exactly as in documentation
             websocat_cmd = [
                 "websocat",
                 "--insecure",
@@ -232,10 +236,10 @@ class KubeBrowseBenchmark:
             
             logger.info(f"Starting websocat for connection {connection_id}: {' '.join(websocat_cmd)}")
             
-            # Start websocat process
+            # Start websocat process with proper stdio handling
             process = await asyncio.create_subprocess_exec(
                 *websocat_cmd,
-                stdin=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -248,13 +252,14 @@ class KubeBrowseBenchmark:
                 'process': process,
                 'connection_id': connection_id,
                 'start_time': datetime.now(),
-                'connection_time': connection_time
+                'connection_time': connection_time,
+                'websocket_url': websocket_url
             }
             self.websocket_processes.append(process_info)
             
             logger.info(f"WebSocket connected via websocat in {connection_time:.2f}s for {connection_id}")
             
-            # Monitor the process
+            # Monitor the process in background
             asyncio.create_task(self.monitor_websocat_process(process_info))
             
             return connection_time
@@ -270,6 +275,14 @@ class KubeBrowseBenchmark:
         connection_id = process_info['connection_id']
         
         try:
+            # Read initial output to confirm connection
+            try:
+                stdout_data = await asyncio.wait_for(process.stdout.read(1024), timeout=5)
+                if stdout_data:
+                    logger.info(f"WebSocket data received for {connection_id}: {len(stdout_data)} bytes")
+            except asyncio.TimeoutError:
+                logger.info(f"No initial data from WebSocket {connection_id} (normal for some connections)")
+            
             # Wait for process to complete or timeout
             await asyncio.wait_for(process.wait(), timeout=300)  # 5 minute timeout
             
@@ -291,16 +304,20 @@ class KubeBrowseBenchmark:
         finally:
             # Remove from active processes
             self.websocket_processes = [p for p in self.websocket_processes if p['connection_id'] != connection_id]
+            logger.info(f"Removed process for connection {connection_id}. Active processes: {len(self.websocket_processes)}")
     
     async def create_concurrent_sessions(self, num_sessions=5):
         """Create multiple concurrent browser sessions with websocat connections"""
+        logger.info(f"Starting concurrent creation of {num_sessions} sessions")
+        
         async with aiohttp.ClientSession() as session:
-            # First, deploy all browser sessions
+            # Phase 1: Deploy all browser sessions concurrently
+            logger.info("Phase 1: Deploying browser sessions...")
             deploy_tasks = []
             for i in range(num_sessions):
                 task = asyncio.create_task(self.deploy_browser_session(session))
                 deploy_tasks.append(task)
-                await asyncio.sleep(0.1)  # Small delay between deployments
+                await asyncio.sleep(0.05)  # Small delay to avoid overwhelming API
             
             # Wait for all deployments to complete
             deploy_results = await asyncio.gather(*deploy_tasks, return_exceptions=True)
@@ -313,9 +330,14 @@ class KubeBrowseBenchmark:
                     successful_deployments.append(connection_id)
                     self.api_response_times.append(latency)
             
-            logger.info(f"Successfully deployed {len(successful_deployments)}/{num_sessions} browser sessions")
+            logger.info(f"Phase 1 complete: {len(successful_deployments)}/{num_sessions} browser sessions deployed")
             
-            # Wait for pods to be ready and get websocket URLs
+            if not successful_deployments:
+                logger.warning("No successful deployments, skipping WebSocket connections")
+                return []
+            
+            # Phase 2: Wait for pods to be ready and get websocket URLs
+            logger.info("Phase 2: Waiting for pods to be ready...")
             websocket_info_tasks = []
             for connection_id in successful_deployments:
                 task = asyncio.create_task(self.wait_for_websocket_ready(session, connection_id))
@@ -326,23 +348,33 @@ class KubeBrowseBenchmark:
             # Filter successful websocket info retrievals
             ready_connections = []
             for result in websocket_results:
-                if isinstance(result, tuple) and result[0] is not None:
+                if isinstance(result, tuple) and result[0] is not None and result[1] is not None:
                     connection_id, websocket_url = result
                     ready_connections.append((connection_id, websocket_url))
             
-            logger.info(f"Got websocket info for {len(ready_connections)}/{len(successful_deployments)} connections")
+            logger.info(f"Phase 2 complete: {len(ready_connections)}/{len(successful_deployments)} connections ready")
             
-            # Now establish all websocket connections concurrently
+            if not ready_connections:
+                logger.warning("No ready connections, skipping WebSocket establishment")
+                return []
+            
+            # Phase 3: Establish all websocket connections concurrently
+            logger.info("Phase 3: Establishing WebSocket connections...")
             websocket_tasks = []
             for connection_id, websocket_url in ready_connections:
                 task = asyncio.create_task(self.connect_websocket_websocat(websocket_url, connection_id))
                 websocket_tasks.append(task)
+                await asyncio.sleep(0.02)  # Very small delay between websocat starts
             
             # Start all websocket connections
             websocket_connection_results = await asyncio.gather(*websocket_tasks, return_exceptions=True)
             
             successful_websockets = len([r for r in websocket_connection_results if not isinstance(r, Exception)])
-            logger.info(f"Successfully established {successful_websockets}/{len(ready_connections)} websocket connections")
+            logger.info(f"Phase 3 complete: {successful_websockets}/{len(ready_connections)} websocket connections established")
+            
+            # Log final status
+            total_active_processes = len([p for p in self.websocket_processes if p['process'].returncode is None])
+            logger.info(f"Concurrent session creation finished. Total active WebSocket processes: {total_active_processes}")
             
             return ready_connections
     
@@ -945,7 +977,7 @@ async def main():
     
     # Configuration
     DURATION_MINUTES = 15  # Run for 15 minutes
-    CONCURRENT_SESSIONS = 100  # Create 100 sessions at a time
+    CONCURRENT_SESSIONS = 50  # Create 50 sessions at a time
     SESSION_INTERVAL = 20  # Wait 20 seconds between batches
     logger.info(f"Running benchmark for {DURATION_MINUTES} minutes with {CONCURRENT_SESSIONS} concurrent sessions.")
     await benchmark.run_benchmark(
