@@ -101,10 +101,13 @@ class SessionMetrics:
     total_api_calls: int = 0
     failed_api_calls: int = 0
     errors: List[str] = None
+    console_errors: List[Dict[str, Any]] = None  # New field for console errors
     
     def __post_init__(self):
         if self.errors is None:
             self.errors = []
+        if self.console_errors is None:
+            self.console_errors = []
 
 class KubernetesMonitor:
     """Monitor Kubernetes cluster metrics"""
@@ -329,6 +332,15 @@ class BrowserSimulator:
         chrome_options.add_argument('--disable-plugins')   # Disable plugins for faster startup
         chrome_options.add_argument('--disable-images')    # Disable image loading for faster page loads
         
+        # Enable logging to capture console errors
+        chrome_options.add_argument('--enable-logging')
+        chrome_options.add_argument('--log-level=0')
+        chrome_options.set_capability('goog:loggingPrefs', {
+            'browser': 'ALL',
+            'driver': 'ALL',
+            'performance': 'ALL'
+        })
+        
         try:
             self.driver = webdriver.Chrome(options=chrome_options)
             self.driver.set_page_load_timeout(self.config.api_timeout)
@@ -341,6 +353,32 @@ class BrowserSimulator:
         except Exception as e:
             self.metrics.errors.append(f"Driver setup failed: {e}")
             return False
+    
+    def capture_console_errors(self):
+        """Capture console errors from browser logs"""
+        try:
+            if not self.driver:
+                return
+                
+            # Get browser logs
+            logs = self.driver.get_log('browser')
+            for log_entry in logs:
+                if log_entry['level'] in ['SEVERE', 'WARNING']:
+                    console_error = {
+                        'timestamp': datetime.now().isoformat(),
+                        'level': log_entry['level'],
+                        'message': log_entry['message'],
+                        'source': log_entry.get('source', 'unknown')
+                    }
+                    self.metrics.console_errors.append(console_error)
+                    
+                    # Also add to regular errors for backward compatibility
+                    error_msg = f"Console {log_entry['level']}: {log_entry['message']}"
+                    if error_msg not in self.metrics.errors:
+                        self.metrics.errors.append(error_msg)
+                        
+        except Exception as e:
+            logger.debug(f"Session {self.session_id}: Could not capture console logs: {e}")
     
     def run_session(self) -> SessionMetrics:
         """Run a complete browser session simulation"""
@@ -357,6 +395,10 @@ class BrowserSimulator:
             self.driver.get(self.config.target_url)
             self.metrics.total_api_calls += 1
             
+            # Capture initial console errors after page load
+            time.sleep(1)  # Brief wait for page to load and generate any errors
+            self.capture_console_errors()
+            
             # Wait for page load with shorter timeout
             WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
@@ -371,6 +413,8 @@ class BrowserSimulator:
             self.metrics.failed_api_calls += 1
             logger.error(f"Session {self.session_id}: Error - {e}")
         finally:
+            # Capture final console errors before ending session
+            self.capture_console_errors()
             # Don't quit the driver automatically - keep window open
             # if self.driver:
             #     self.driver.quit()
@@ -397,8 +441,9 @@ class BrowserSimulator:
             self.metrics.total_api_calls += 1
             logger.info(f"Session {self.session_id}: First click completed in {self.metrics.first_click_response_time:.3f}s")
             
-            # Short wait before next interaction
+            # Capture console errors after first click
             time.sleep(0.5)
+            self.capture_console_errors()
             
             # Click first py-2 button
             logger.info(f"Session {self.session_id}: Looking for py-2 elements")
@@ -407,7 +452,10 @@ class BrowserSimulator:
                 py2_elements[0].click()
                 self.metrics.total_api_calls += 1
                 logger.info(f"Session {self.session_id}: Clicked first py-2 button")
+                
+                # Capture console errors after py-2 click
                 time.sleep(0.5)
+                self.capture_console_errors()
                 
                 # Check for second py-2 button or wait like in selenium test
                 py2_elements_after = self.driver.find_elements(By.CSS_SELECTOR, ".py-2")
@@ -417,6 +465,10 @@ class BrowserSimulator:
                         py2_elements_after[1].click()
                         self.metrics.total_api_calls += 1
                         logger.info(f"Session {self.session_id}: Successfully clicked second py-2 button")
+                        
+                        # Capture console errors after second click
+                        time.sleep(0.5)
+                        self.capture_console_errors()
                 else:
                     # Keep window open like in selenium test - use proper wait mechanism
                     logger.info(f"Session {self.session_id}: Keeping browser window open...")
@@ -697,7 +749,7 @@ class PeriodicVisualizationSaver:
                 plt.ioff()
                 matplotlib.use('Agg')
                 
-                # Create enhanced dashboard visualization with sessions monitoring
+                # Create enhanced dashboard visualization with console errors
                 try:
                     fig, axes = plt.subplots(3, 3, figsize=(20, 15))
                     fig.suptitle(f'KubeBrowse Comprehensive Performance Dashboard - {timestamp}', fontsize=16, fontweight='bold')
@@ -898,7 +950,7 @@ class PeriodicVisualizationSaver:
                 with open(metrics_file, 'w') as f:
                     json.dump(serializable_data, f, indent=2)
                 
-                # Create enhanced summary file
+                # Create enhanced summary file with console errors
                 summary_file = f"{snapshot_dir}/summary.txt"
                 with open(summary_file, 'w') as f:
                     f.write(f"Benchmark Snapshot - {timestamp}\n")
@@ -926,6 +978,19 @@ class PeriodicVisualizationSaver:
                         if response_times:
                             f.write(f"Average response time: {np.mean(response_times):.3f}s\n")
                             f.write(f"Max response time: {max(response_times):.3f}s\n")
+                    
+                    # Add console errors summary
+                    if data['session_metrics']:
+                        total_console_errors = sum(len(s.get('console_errors', [])) for s in data['session_metrics'])
+                        total_severe_errors = sum(
+                            sum(1 for err in s.get('console_errors', []) if err.get('level') == 'SEVERE')
+                            for s in data['session_metrics']
+                        )
+                        f.write(f"Total console errors: {total_console_errors}\n")
+                        f.write(f"Severe console errors: {total_severe_errors}\n")
+                        
+                        if total_console_errors > 0:
+                            f.write(f"Avg console errors per session: {total_console_errors / len(data['session_metrics']):.1f}\n")
                 
                 logger.info(f"Saved visualization snapshot {self.save_counter} to {snapshot_dir}")
                 
@@ -937,6 +1002,27 @@ class PeriodicVisualizationSaver:
                     plt.clf()
                 except:
                     pass
+
+    def _categorize_console_error(self, error_message: str) -> str:
+        """Categorize console error by message content"""
+        error_message_lower = error_message.lower()
+        
+        if 'failed to load resource' in error_message_lower or '404' in error_message_lower:
+            return 'Resource Load Failed'
+        elif 'network error' in error_message_lower or 'net::' in error_message_lower:
+            return 'Network Error'
+        elif 'websocket' in error_message_lower or 'ws://' in error_message_lower:
+            return 'WebSocket Error'
+        elif 'cors' in error_message_lower or 'cross-origin' in error_message_lower:
+            return 'CORS Error'
+        elif 'javascript' in error_message_lower or 'script error' in error_message_lower:
+            return 'JavaScript Error'
+        elif 'timeout' in error_message_lower:
+            return 'Timeout Error'
+        elif 'security' in error_message_lower or 'ssl' in error_message_lower:
+            return 'Security Error'
+        else:
+            return 'Other Error'
 
 class LoadTestController:
     """Control the load testing process"""
