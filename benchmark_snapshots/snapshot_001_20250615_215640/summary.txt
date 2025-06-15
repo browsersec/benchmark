@@ -1,0 +1,7 @@
+Benchmark Snapshot - 20250615_215640
+========================================
+
+Timestamp: 20250615_215640
+Data points collected: 2
+Total sessions: 0
+Running pods: 17

@@ -1,0 +1,328 @@
+2025-06-15 21:08:36,591 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:08:36,591 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=20, ramp_up_duration=300, test_duration=1800, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10)
+2025-06-15 21:08:36,602 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:08:36,603 - INFO - Active sessions: 0, Completed: 0
+2025-06-15 21:08:39,235 - ERROR - Error getting pod metrics: 'V1ContainerStatus' object has no attribute 'status'
+2025-06-15 21:08:46,665 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:08:51,435 - ERROR - Error getting pod metrics: 'V1ContainerStatus' object has no attribute 'status'
+2025-06-15 21:08:56,617 - INFO - Active sessions: 2, Completed: 0
+2025-06-15 21:09:04,030 - ERROR - Error getting pod metrics: 'V1ContainerStatus' object has no attribute 'status'
+2025-06-15 21:09:06,666 - INFO - Active sessions: 0, Completed: 0
+2025-06-15 21:09:16,287 - ERROR - Error getting pod metrics: 'V1ContainerStatus' object has no attribute 'status'
+2025-06-15 21:09:16,622 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:09:19,707 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:09:19,711 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021d0d00>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/429d2e8e39f6a1a55b5f399492a64ce0
+2025-06-15 21:09:19,712 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021ef460>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d2554f0f2fab33669cb184eed1ea224d
+2025-06-15 21:09:19,713 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021cae80>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/309509545c5825aa46348f204ff88742
+2025-06-15 21:09:19,713 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021ca760>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/429d2e8e39f6a1a55b5f399492a64ce0
+2025-06-15 21:09:19,720 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021ef1c0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/429d2e8e39f6a1a55b5f399492a64ce0
+2025-06-15 21:09:19,720 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021efb80>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d2554f0f2fab33669cb184eed1ea224d
+2025-06-15 21:09:19,721 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021ef0d0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/309509545c5825aa46348f204ff88742
+2025-06-15 21:09:19,723 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021cadf0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d2554f0f2fab33669cb184eed1ea224d
+2025-06-15 21:09:19,724 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7bfc021ca8e0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/309509545c5825aa46348f204ff88742
+2025-06-15 21:09:21,999 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:11:45,525 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:11:45,525 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=20, ramp_up_duration=300, test_duration=1800, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10)
+2025-06-15 21:11:45,546 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:11:45,548 - INFO - Active sessions: 0, Completed: 0
+2025-06-15 21:11:55,603 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:12:05,553 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:12:15,602 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:12:25,553 - INFO - Active sessions: 2, Completed: 0
+2025-06-15 21:12:35,602 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:12:44,248 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:12:44,252 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f13dd854ac0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/6f223350f82aca3ef5f898456010deb1
+2025-06-15 21:12:44,253 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f13dcf85fd0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/6f223350f82aca3ef5f898456010deb1
+2025-06-15 21:12:44,253 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f13dcf857f0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/6f223350f82aca3ef5f898456010deb1
+2025-06-15 21:12:45,013 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f13dcfcb9d0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e33dfd2a8eba4d46fd44132f1f797d37/elements
+2025-06-15 21:12:45,013 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f13dcfcbd90>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e33dfd2a8eba4d46fd44132f1f797d37/elements
+2025-06-15 21:12:45,014 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f13dcfcbd30>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e33dfd2a8eba4d46fd44132f1f797d37/elements
+2025-06-15 21:12:45,014 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1419dc1e20>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e33dfd2a8eba4d46fd44132f1f797d37
+2025-06-15 21:12:45,014 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1419dc1040>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e33dfd2a8eba4d46fd44132f1f797d37
+2025-06-15 21:12:45,015 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1419dc12b0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e33dfd2a8eba4d46fd44132f1f797d37
+2025-06-15 21:19:00,193 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:19:00,193 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=20, ramp_up_duration=300, test_duration=1800, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, show_live_dashboard=True, live_update_interval=3000)
+2025-06-15 21:19:00,193 - INFO - Live dashboard will be displayed during the test
+2025-06-15 21:19:00,193 - INFO - Close the dashboard window or press Ctrl+C to stop the benchmark
+2025-06-15 21:19:00,205 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:19:00,563 - INFO - Live dashboard started - close the plot window to stop
+2025-06-15 21:19:02,209 - INFO - Active sessions: 0, Completed: 0
+2025-06-15 21:19:12,261 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:19:22,216 - INFO - Active sessions: 2, Completed: 0
+2025-06-15 21:19:23,416 - INFO - Session user_1: Keeping browser window open...
+2025-06-15 21:19:32,264 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:19:35,895 - INFO - Session user_2: Keeping browser window open...
+2025-06-15 21:19:42,213 - INFO - Active sessions: 2, Completed: 0
+2025-06-15 21:19:52,266 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:19:53,506 - INFO - Session user_3: Keeping browser window open...
+2025-06-15 21:19:53,646 - INFO - Session user_2: Keeping browser window open...
+2025-06-15 21:20:02,219 - INFO - Active sessions: 2, Completed: 0
+2025-06-15 21:20:12,273 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:20:22,222 - INFO - Active sessions: 4, Completed: 0
+2025-06-15 21:20:25,416 - INFO - Session user_3: Keeping browser window open...
+2025-06-15 21:20:32,216 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:20:42,267 - INFO - Active sessions: 4, Completed: 0
+2025-06-15 21:20:43,903 - INFO - Session user_6: Keeping browser window open...
+2025-06-15 21:20:46,675 - INFO - Session user_5: Keeping browser window open...
+2025-06-15 21:20:52,231 - INFO - Active sessions: 5, Completed: 0
+2025-06-15 21:20:52,373 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:21:02,804 - INFO - Session user_8: Keeping browser window open...
+2025-06-15 21:21:04,052 - ERROR - Benchmark failed: main thread is not in main loop
+2025-06-15 21:29:55,794 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:29:55,794 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=3600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None)
+2025-06-15 21:29:55,794 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 21:29:55,794 - INFO - Visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 21:29:55,806 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 21:29:55,806 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:29:55,807 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 21:29:55,808 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:30:05,860 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:30:07,886 - INFO - Session user_1: Keeping browser window open...
+2025-06-15 21:30:15,810 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:30:26,113 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:30:28,628 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20250615_213025
+2025-06-15 21:30:29,244 - INFO - Session user_5: Keeping browser window open...
+2025-06-15 21:30:30,437 - INFO - Session user_4: Keeping browser window open...
+2025-06-15 21:30:35,859 - INFO - Active sessions: 5, Completed: 0
+2025-06-15 21:30:41,672 - INFO - Session user_5: Keeping browser window open...
+2025-06-15 21:30:45,817 - INFO - Active sessions: 8, Completed: 0
+2025-06-15 21:30:48,997 - INFO - Session user_5: Keeping browser window open...
+2025-06-15 21:30:55,875 - INFO - Active sessions: 7, Completed: 0
+2025-06-15 21:41:56,298 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:41:56,298 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=3600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=10)
+2025-06-15 21:41:56,298 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 21:41:56,298 - INFO - Browser initialization wait time: 10 seconds
+2025-06-15 21:41:56,298 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 21:41:56,319 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 21:41:56,320 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:41:56,321 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 21:41:56,322 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:42:06,384 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:42:16,339 - INFO - Active sessions: 4, Completed: 0
+2025-06-15 21:42:26,388 - INFO - Active sessions: 4, Completed: 0
+2025-06-15 21:42:28,040 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20250615_214226
+2025-06-15 21:43:15,469 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:43:15,469 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=3600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=10)
+2025-06-15 21:43:15,469 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 21:43:15,469 - INFO - Browser initialization wait time: 10 seconds
+2025-06-15 21:43:15,469 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 21:43:15,482 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 21:43:15,482 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:43:15,483 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 21:43:15,484 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:43:25,535 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:43:33,292 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:43:36,026 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76056970ec70>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/07b3d1d51efb69ef6914bb52db64ae97/url
+2025-06-15 21:43:36,028 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7605697e0460>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/07b3d1d51efb69ef6914bb52db64ae97/url
+2025-06-15 21:43:36,029 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7605697e0610>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/07b3d1d51efb69ef6914bb52db64ae97/url
+2025-06-15 21:43:36,044 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x760569720250>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d9501f563012459a063941f2d471751a/url
+2025-06-15 21:43:36,045 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7605697e0b50>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d9501f563012459a063941f2d471751a/url
+2025-06-15 21:43:36,045 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7605697e0d60>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d9501f563012459a063941f2d471751a/url
+2025-06-15 21:43:39,336 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:43:54,164 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:43:54,164 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=3600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=4)
+2025-06-15 21:43:54,164 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 21:43:54,164 - INFO - Browser initialization wait time: 4 seconds
+2025-06-15 21:43:54,164 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 21:43:54,185 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 21:43:54,185 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:43:54,187 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 21:43:54,188 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:44:04,247 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:44:12,465 - INFO - Session user_1: Keeping browser window open...
+2025-06-15 21:44:14,199 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:44:24,514 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:44:26,695 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20250615_214424
+2025-06-15 21:44:34,305 - INFO - Active sessions: 5, Completed: 0
+2025-06-15 21:44:44,267 - INFO - Active sessions: 8, Completed: 0
+2025-06-15 21:44:54,224 - INFO - Active sessions: 7, Completed: 0
+2025-06-15 21:48:32,014 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:48:32,014 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=3600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=4)
+2025-06-15 21:48:32,014 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 21:48:32,014 - INFO - Browser initialization wait time: 4 seconds
+2025-06-15 21:48:32,014 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-06-15 21:48:32,014 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 21:48:32,026 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 21:48:32,026 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:48:32,027 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 21:48:32,027 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:48:42,091 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:48:49,777 - INFO - Session user_1: Keeping browser window open...
+2025-06-15 21:48:52,041 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:49:02,123 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:49:05,276 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20250615_214902
+2025-06-15 21:49:11,057 - INFO - Session user_4: Keeping browser window open...
+2025-06-15 21:49:12,069 - INFO - Active sessions: 5, Completed: 0
+2025-06-15 21:49:32,768 - INFO - Active sessions: 8, Completed: 0
+2025-06-15 21:50:07,478 - INFO - Active sessions: 9, Completed: 0
+2025-06-15 21:50:07,778 - INFO - Active sessions: 10, Completed: 0
+2025-06-15 21:50:07,967 - INFO - Active sessions: 12, Completed: 0
+2025-06-15 21:50:08,256 - INFO - Active sessions: 14, Completed: 0
+2025-06-15 21:51:16,751 - INFO - Active sessions: 14, Completed: 0
+2025-06-15 21:51:21,177 - INFO - Active sessions: 15, Completed: 0
+2025-06-15 21:51:22,173 - INFO - Active sessions: 14, Completed: 0
+2025-06-15 21:51:22,632 - INFO - Active sessions: 13, Completed: 0
+2025-06-15 21:51:22,913 - INFO - Active sessions: 12, Completed: 0
+                                                                                                                                      2025-06-15 21:54:12,573 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:54:12,573 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=3600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=10)
+2025-06-15 21:54:12,573 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 21:54:12,573 - INFO - Browser initialization wait time: 10 seconds
+2025-06-15 21:54:12,573 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-06-15 21:54:12,573 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 21:54:12,595 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 21:54:12,596 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:54:12,597 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 21:54:12,598 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:54:22,657 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:54:32,604 - INFO - Active sessions: 4, Completed: 0
+2025-06-15 21:54:42,655 - INFO - Active sessions: 5, Completed: 0
+2025-06-15 21:54:45,580 - INFO - Session user_1: Keeping browser window open...
+2025-06-15 21:54:45,646 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20250615_215442
+2025-06-15 21:54:52,647 - INFO - Active sessions: 5, Completed: 0
+2025-06-15 21:55:02,706 - INFO - Active sessions: 7, Completed: 0
+2025-06-15 21:55:12,674 - INFO - Active sessions: 7, Completed: 0
+2025-06-15 21:55:16,997 - INFO - Saved visualization snapshot 2 to benchmark_snapshots/snapshot_002_20250615_215515
+2025-06-15 21:55:22,656 - INFO - Active sessions: 8, Completed: 0
+2025-06-15 21:55:32,610 - INFO - Active sessions: 8, Completed: 0
+2025-06-15 21:55:42,692 - INFO - Active sessions: 10, Completed: 0
+2025-06-15 21:55:48,833 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:55:49,042 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:55:49,537 - INFO - Saved visualization snapshot 3 to benchmark_snapshots/snapshot_003_20250615_215547
+2025-06-15 21:55:53,910 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05934d3bb0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/c01768c71665f9e6bcaa2bf9cec932f5/url
+2025-06-15 21:55:53,912 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d059364c760>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/c01768c71665f9e6bcaa2bf9cec932f5/url
+2025-06-15 21:55:53,912 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d059364cc70>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/c01768c71665f9e6bcaa2bf9cec932f5/url
+2025-06-15 21:55:53,964 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05934d3970>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/c7c21447f071ec181c600c2d7b64aa12/url
+2025-06-15 21:55:53,964 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d059364c4c0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/c7c21447f071ec181c600c2d7b64aa12/url
+2025-06-15 21:55:53,964 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05936313d0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/c7c21447f071ec181c600c2d7b64aa12/url
+2025-06-15 21:55:54,001 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593752d60>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/ee1d932f0f02a271c0014468323abbd0/url
+2025-06-15 21:55:54,002 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593631460>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/ee1d932f0f02a271c0014468323abbd0/url
+2025-06-15 21:55:54,002 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593631670>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/ee1d932f0f02a271c0014468323abbd0/url
+2025-06-15 21:55:54,007 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05934c8220>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/644fe18ca150bee68baaada4177acc69/url
+2025-06-15 21:55:54,008 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05936315e0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/644fe18ca150bee68baaada4177acc69/url
+2025-06-15 21:55:54,008 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593752d00>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/ea82edc717245467bf296a8e06770ab6/url
+2025-06-15 21:55:54,008 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593631eb0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/644fe18ca150bee68baaada4177acc69/url
+2025-06-15 21:55:54,009 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d059364f160>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/ea82edc717245467bf296a8e06770ab6/url
+2025-06-15 21:55:54,009 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593752d60>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/ea82edc717245467bf296a8e06770ab6/url
+2025-06-15 21:55:54,031 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05934c8820>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d7ddb632bf0cd99a49a523f58471fdae/url
+2025-06-15 21:55:54,032 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593631370>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d7ddb632bf0cd99a49a523f58471fdae/url
+2025-06-15 21:55:54,032 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05936311c0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/d7ddb632bf0cd99a49a523f58471fdae/url
+2025-06-15 21:55:54,053 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05934c85e0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/0f9164d50c04900cb60a46d47797f1dd/url
+2025-06-15 21:55:54,054 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593631a90>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/0f9164d50c04900cb60a46d47797f1dd/url
+2025-06-15 21:55:54,054 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d05934b39a0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/0f9164d50c04900cb60a46d47797f1dd/url
+2025-06-15 21:55:54,064 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d0593752430>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/567b906aa1bbb53d09a174e00e39bfac/url
+2025-06-15 21:55:54,065 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d059364c550>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/567b906aa1bbb53d09a174e00e39bfac/url
+2025-06-15 21:55:54,065 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7d059364cf10>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/567b906aa1bbb53d09a174e00e39bfac/url
+2025-06-15 21:56:10,625 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 21:56:10,625 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=3600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=15)
+2025-06-15 21:56:10,625 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 21:56:10,625 - INFO - Browser initialization wait time: 15 seconds
+2025-06-15 21:56:10,625 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-06-15 21:56:10,625 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 21:56:10,638 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 21:56:10,639 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 21:56:10,640 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 21:56:10,640 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 21:56:20,705 - INFO - Active sessions: 3, Completed: 0
+2025-06-15 21:56:25,360 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 21:56:26,065 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7658036fa2b0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e46b2eae41d61a3896d14baef77783a4/url
+2025-06-15 21:56:26,066 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fb10f40>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e46b2eae41d61a3896d14baef77783a4/url
+2025-06-15 21:56:26,066 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fb10ca0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e46b2eae41d61a3896d14baef77783a4/url
+2025-06-15 21:56:36,183 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fb10c10>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/de280085319eb21659181017bcb61d95/url
+2025-06-15 21:56:36,183 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fa09e20>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/de280085319eb21659181017bcb61d95/url
+2025-06-15 21:56:36,184 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fa09fd0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/de280085319eb21659181017bcb61d95/url
+2025-06-15 21:56:36,202 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fb102e0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/629cda2c7e5818bb1e8a154a6a263bc4/url
+2025-06-15 21:56:36,203 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fb43490>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/629cda2c7e5818bb1e8a154a6a263bc4/url
+2025-06-15 21:56:36,203 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76583fb43670>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/629cda2c7e5818bb1e8a154a6a263bc4/url
+2025-06-15 21:56:42,108 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20250615_215640
+2025-06-15 22:01:29,633 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 22:01:29,633 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=1, session_start_interval=0.8)
+2025-06-15 22:01:29,633 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 22:01:29,633 - INFO - Browser initialization wait time: 1 seconds
+2025-06-15 22:01:29,633 - INFO - Session start interval: 0.8 seconds
+2025-06-15 22:01:29,633 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-06-15 22:01:29,633 - INFO - Optimized for immediate click simulation with minimal delays
+2025-06-15 22:01:29,633 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 22:01:29,643 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 22:01:29,643 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 22:01:29,644 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 22:01:29,644 - INFO - Starting 5 new sessions with 0.8s interval
+2025-06-15 22:01:29,644 - INFO - Session user_1: Starting session
+2025-06-15 22:01:29,644 - INFO - Started session user_1 at 22:01:29
+2025-06-15 22:01:30,449 - INFO - Session user_3: Starting session
+2025-06-15 22:01:30,449 - INFO - Started session user_3 at 22:01:30
+2025-06-15 22:01:30,514 - INFO - Session user_1: Navigating to http://4.156.203.206/
+2025-06-15 22:01:31,253 - INFO - Session user_5: Starting session
+2025-06-15 22:01:31,253 - INFO - Started session user_5 at 22:01:31
+2025-06-15 22:01:31,334 - INFO - Session user_3: Navigating to http://4.156.203.206/
+2025-06-15 22:01:32,057 - INFO - Session user_7: Starting session
+2025-06-15 22:01:32,057 - INFO - Started session user_7 at 22:01:32
+2025-06-15 22:01:32,115 - INFO - Session user_5: Navigating to http://4.156.203.206/
+2025-06-15 22:01:32,861 - INFO - Session user_9: Starting session
+2025-06-15 22:01:32,861 - INFO - Started session user_9 at 22:01:32
+2025-06-15 22:01:32,862 - INFO - Active sessions: 5, Completed: 0
+2025-06-15 22:01:32,919 - INFO - Session user_7: Navigating to http://4.156.203.206/
+2025-06-15 22:01:33,735 - INFO - Session user_9: Navigating to http://4.156.203.206/
+2025-06-15 22:01:37,850 - INFO - Session user_5: Page loaded, starting interactions
+2025-06-15 22:01:38,351 - INFO - Session user_5: Attempting first click
+2025-06-15 22:01:38,408 - INFO - Session user_5: First click completed in 0.057s
+2025-06-15 22:01:38,871 - INFO - Session user_1: Page loaded, starting interactions
+2025-06-15 22:01:38,911 - INFO - Session user_5: Looking for py-2 elements
+2025-06-15 22:01:38,957 - INFO - Session user_5: Clicked first py-2 button
+2025-06-15 22:01:39,374 - INFO - Session user_1: Attempting first click
+2025-06-15 22:01:39,428 - INFO - Session user_1: First click completed in 0.055s
+2025-06-15 22:01:39,464 - INFO - Session user_5: Keeping browser window open...
+2025-06-15 22:01:39,464 - ERROR - Session user_5: Interaction error - timestamp too large to convert to C _PyTime_t
+2025-06-15 22:01:39,921 - INFO - Session user_9: Page loaded, starting interactions
+2025-06-15 22:01:39,930 - INFO - Session user_1: Looking for py-2 elements
+2025-06-15 22:01:39,979 - INFO - Session user_1: Clicked first py-2 button
+2025-06-15 22:01:40,233 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 22:01:40,234 - ERROR - Session user_3: Error - ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2025-06-15 22:01:40,235 - ERROR - Session user_7: Error - ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2025-06-15 22:01:40,423 - INFO - Session user_9: Attempting first click
+2025-06-15 22:01:40,424 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af3c7fa130>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/072ec65946cea6dc564ec73217c211fb/element
+2025-06-15 22:01:40,425 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af003666a0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/072ec65946cea6dc564ec73217c211fb/element
+2025-06-15 22:01:40,425 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af3c732610>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/072ec65946cea6dc564ec73217c211fb/element
+2025-06-15 22:01:40,425 - ERROR - Session user_9: Interaction error - HTTPConnectionPool(host='localhost', port=54285): Max retries exceeded with url: /session/072ec65946cea6dc564ec73217c211fb/element (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af3c732a90>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2025-06-15 22:01:40,481 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af00366880>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/066d6eb4ccb48c104f9996e811c2b02d/elements
+2025-06-15 22:01:40,481 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af3c7323a0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/066d6eb4ccb48c104f9996e811c2b02d/elements
+2025-06-15 22:01:40,482 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af3c732190>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/066d6eb4ccb48c104f9996e811c2b02d/elements
+2025-06-15 22:01:40,482 - ERROR - Session user_1: Interaction error - HTTPConnectionPool(host='localhost', port=45979): Max retries exceeded with url: /session/066d6eb4ccb48c104f9996e811c2b02d/elements (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x70af3c732070>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2025-06-15 22:02:05,638 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 22:02:05,638 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=20, session_start_interval=5.0)
+2025-06-15 22:02:05,638 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 22:02:05,638 - INFO - Browser initialization wait time: 20 seconds
+2025-06-15 22:02:05,638 - INFO - Session start interval: 5.0 seconds
+2025-06-15 22:02:05,638 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-06-15 22:02:05,638 - INFO - Optimized for immediate click simulation with minimal delays
+2025-06-15 22:02:05,638 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 22:02:05,660 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 22:02:05,660 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 22:02:05,662 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 22:02:05,662 - INFO - Starting 5 new sessions with 5.0s interval
+2025-06-15 22:02:05,662 - INFO - Session user_1: Starting session
+2025-06-15 22:02:05,663 - INFO - Started session user_1 at 22:02:05
+2025-06-15 22:02:06,875 - INFO - Session user_1: Navigating to http://4.156.203.206/
+2025-06-15 22:02:10,688 - INFO - Session user_3: Starting session
+2025-06-15 22:02:10,688 - INFO - Started session user_3 at 22:02:10
+2025-06-15 22:02:11,557 - INFO - Session user_3: Navigating to http://4.156.203.206/
+2025-06-15 22:02:12,389 - INFO - Session user_1: Page loaded, starting interactions
+2025-06-15 22:02:12,891 - INFO - Session user_1: Attempting first click
+2025-06-15 22:02:12,947 - INFO - Session user_1: First click completed in 0.056s
+2025-06-15 22:02:13,450 - INFO - Session user_1: Looking for py-2 elements
+2025-06-15 22:02:13,492 - INFO - Session user_1: Clicked first py-2 button
+2025-06-15 22:02:14,000 - INFO - Session user_1: Keeping browser window open...
+2025-06-15 22:02:14,001 - ERROR - Session user_1: Interaction error - timestamp too large to convert to C _PyTime_t
+2025-06-15 22:02:15,704 - INFO - Started session user_5 at 22:02:15
+2025-06-15 22:02:15,704 - INFO - Session user_5: Starting session
+2025-06-15 22:02:16,904 - INFO - Session user_5: Navigating to http://4.156.203.206/
+2025-06-15 22:02:18,851 - INFO - Session user_3: Page loaded, starting interactions
+2025-06-15 22:02:19,353 - INFO - Session user_3: Attempting first click
+2025-06-15 22:02:19,412 - INFO - Session user_3: First click completed in 0.059s
+2025-06-15 22:02:19,914 - INFO - Session user_3: Looking for py-2 elements
+2025-06-15 22:02:19,965 - INFO - Session user_3: Clicked first py-2 button
+2025-06-15 22:02:20,022 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 22:02:20,023 - ERROR - Session user_5: Error - ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2025-06-15 22:02:20,468 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x757add9981f0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e2540c1e2dcdd879ba879366a786064c/elements
+2025-06-15 22:02:20,469 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x757add91f910>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e2540c1e2dcdd879ba879366a786064c/elements
+2025-06-15 22:02:20,469 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x757add91fac0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e2540c1e2dcdd879ba879366a786064c/elements
+2025-06-15 22:02:20,470 - ERROR - Session user_3: Interaction error - HTTPConnectionPool(host='localhost', port=48799): Max retries exceeded with url: /session/e2540c1e2dcdd879ba879366a786064c/elements (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x757add91f760>: Failed to establish a new connection: [Errno 111] Connection refused'))

@@ -1,1009 +1,1853 @@
 #!/usr/bin/env python3
 """
-KubeBrowse Benchmarking System
-Monitors and visualizes performance metrics for the KubeBrowse application
+KubeBrowse Comprehensive Benchmarking Suite
+===========================================
+This suite performs load testing and monitoring for the KubeBrowse application
+with detailed metrics collection and visualization for white paper analysis.
 """
 
 import asyncio
-import os
-import aiohttp
-import ssl
+import threading
 import time
 import json
-import threading
-import requests
+import logging
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from matplotlib.animation import FuncAnimation
+from typing import Dict, List, Any, Optional
+from dataclasses import dataclass, asdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import subprocess
+import signal
+import sys
+import os
+import argparse
+
+# Core libraries
 import pandas as pd
 import numpy as np
-from collections import defaultdict, deque
-import subprocess
-import yaml
-import logging
-from concurrent.futures import ThreadPoolExecutor
-import queue
-import warnings
-warnings.filterwarnings('ignore')
+# Set matplotlib backend before importing pyplot to avoid GUI issues
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib.animation import FuncAnimation
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
 
-os.environ['KUBECONFIG'] = '/home/sanjay7178/kube/proxmox.yml'  
+# Kubernetes and monitoring
+from kubernetes import client, config
+import psutil
+import requests
+import websocket
+from prometheus_client.parser import text_string_to_metric_families
+
+# Selenium for browser automation
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException, WebDriverException
+
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('kubebrowse_benchmark.log'),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
-class KubeBrowseBenchmark:
-    def __init__(self, api_base_url="https://172.18.120.152:30006", namespace="browser-sandbox"):
-        self.api_base_url = api_base_url
+@dataclass
+class BenchmarkConfig:
+    """Configuration for benchmark parameters"""
+    target_url: str = "http://4.156.203.206/"
+    namespace: str = "browser-sandbox"
+    max_concurrent_users: int = 50
+    ramp_up_duration: int = 300  # 5 minutes
+    test_duration: int = 1800    # 30 minutes
+    ramp_down_duration: int = 300  # 5 minutes
+    polling_interval: int = 10   # seconds
+    websocket_timeout: int = 30
+    api_timeout: int = 10
+    save_visualizations: bool = True  # Enable periodic visualization saving
+    save_interval: int = 60  # Save visualizations every 60 seconds
+    output_dir: str = "benchmark_snapshots"  # Directory for saved visualizations
+    kubeconfig_path: Optional[str] = None  # Custom kubeconfig file path
+    sessions_api_url: Optional[str] = None  # Sessions API endpoint URL
+    sessions_api_insecure: bool = False  # Allow insecure HTTPS connections
+    enable_sessions_monitoring: bool = False  # Enable sessions API monitoring
+    browser_init_wait: int = 2  # Wait time after browser window initiation in seconds
+    session_start_interval: float = 1.0  # Time interval between starting new sessions in seconds
+
+@dataclass
+class MetricPoint:
+    """Single metric measurement"""
+    timestamp: datetime
+    value: float
+    metadata: Dict[str, Any] = None
+
+@dataclass
+class SessionMetrics:
+    """Metrics for a single user session"""
+    session_id: str
+    start_time: datetime
+    end_time: Optional[datetime] = None
+    pod_creation_time: Optional[float] = None
+    websocket_connection_time: Optional[float] = None
+    first_click_response_time: Optional[float] = None
+    total_api_calls: int = 0
+    failed_api_calls: int = 0
+    errors: List[str] = None
+    
+    def __post_init__(self):
+        if self.errors is None:
+            self.errors = []
+
+class KubernetesMonitor:
+    """Monitor Kubernetes cluster metrics"""
+    
+    def __init__(self, namespace: str, kubeconfig_path: Optional[str] = None):
         self.namespace = namespace
-        self.start_time = datetime.now()
+        self.kubeconfig_path = kubeconfig_path
         
-        # Create plots directory
-        self.plots_dir = f'/home/sanjay7178/benchmark/plots_{self.start_time.strftime("%Y%m%d_%H%M%S")}'
-        os.makedirs(self.plots_dir, exist_ok=True)
-        
-        # Data storage
-        self.metrics_data = {
-            'timestamps': deque(maxlen=1000),
-            'cpu_usage': deque(maxlen=1000),
-            'memory_usage': deque(maxlen=1000),
-            'pod_counts': deque(maxlen=1000),
-            'api_latency': deque(maxlen=1000),
-            'websocket_connections': deque(maxlen=1000),
-            'active_sessions': deque(maxlen=1000),
-            'hpa_replicas': {
-                'api': deque(maxlen=1000),
-                'frontend': deque(maxlen=1000),
-                'guacd': deque(maxlen=1000)
-            }
-        }
-        
-        # Connection tracking
-        self.active_connections = {}
-        self.connection_queue = queue.Queue()
-        self.websocket_processes = []  # Track websocat processes instead of tasks
-        
-        # SSL context for insecure connections
-        self.ssl_context = ssl.create_default_context()
-        self.ssl_context.check_hostname = False
-        self.ssl_context.verify_mode = ssl.CERT_NONE
-        
-        # Performance tracking
-        self.api_response_times = deque(maxlen=1000)
-        self.websocket_connection_times = deque(maxlen=1000)
-        
-        # Plot save tracking
-        self.last_plot_save = datetime.now()
-        self.plot_save_interval = 60  # Save plots every 60 seconds
-        
-    def get_kubernetes_metrics(self):
-        """Get Kubernetes cluster metrics using kubectl"""
         try:
-            # Get node metrics
-            node_cmd = ["kubectl", "top", "nodes", "--no-headers"]
-            node_result = subprocess.run(node_cmd, capture_output=True, text=True)
-            
-            cpu_usage = 0
-            memory_usage = 0
-            
-            if node_result.returncode == 0:
-                for line in node_result.stdout.strip().split('\n'):
-                    if line:
-                        parts = line.split()
-                        cpu_str = parts[1].replace('m', '').replace('%', '')
-                        memory_str = parts[2].replace('Mi', '').replace('Gi', '').replace('%', '')
-                        
-                        try:
-                            cpu_usage += float(cpu_str) if 'm' not in parts[1] else float(cpu_str) / 1000
-                            if 'Gi' in parts[2]:
-                                memory_usage += float(memory_str) * 1024
-                            else:
-                                memory_usage += float(memory_str)
-                        except ValueError:
-                            continue
-            
-            # Get browser pod count
-            pod_cmd = ["kubectl", "get", "pods", "-n", self.namespace, "-l", "app=browser-sandbox-browser", "--no-headers"]
-            pod_result = subprocess.run(pod_cmd, capture_output=True, text=True)
-            
-            pod_count = 0
-            if pod_result.returncode == 0:
-                pod_count = len([line for line in pod_result.stdout.strip().split('\n') if line])
-            
-            # Get HPA metrics
-            hpa_metrics = self.get_hpa_metrics()
-            
-            return {
-                'cpu_usage': cpu_usage,
-                'memory_usage': memory_usage,
-                'pod_count': pod_count,
-                'hpa_metrics': hpa_metrics
-            }
-            
+            if kubeconfig_path:
+                logger.info(f"Using custom kubeconfig: {kubeconfig_path}")
+                config.load_kube_config(config_file=kubeconfig_path)
+            else:
+                try:
+                    config.load_incluster_config()
+                    logger.info("Using in-cluster configuration")
+                except:
+                    config.load_kube_config()
+                    logger.info("Using default kubeconfig from kubectl context")
         except Exception as e:
-            logger.error(f"Error getting Kubernetes metrics: {e}")
-            return {
-                'cpu_usage': 0,
-                'memory_usage': 0,
-                'pod_count': 0,
-                'hpa_metrics': {'api': 0, 'frontend': 0, 'guacd': 0}
-            }
-    
-    def get_hpa_metrics(self):
-        """Get HPA replica counts"""
-        hpa_metrics = {'api': 0, 'frontend': 0, 'guacd': 0}
+            logger.error(f"Failed to load Kubernetes configuration: {e}")
+            raise
         
+        self.v1 = client.CoreV1Api()
+        self.apps_v1 = client.AppsV1Api()
+        self.metrics_v1beta1 = client.CustomObjectsApi()
+        
+    def get_node_metrics(self) -> Dict[str, Dict[str, float]]:
+        """Get CPU and memory usage for all nodes"""
+        metrics = {}
         try:
-            hpa_cmd = ["kubectl", "get", "hpa", "-n", self.namespace, "-o", "json"]
-            result = subprocess.run(hpa_cmd, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                hpa_data = json.loads(result.stdout)
-                for item in hpa_data.get('items', []):
-                    name = item['metadata']['name']
-                    replicas = item.get('status', {}).get('currentReplicas', 0)
+            nodes = self.v1.list_node()
+            for node in nodes.items:
+                node_name = node.metadata.name
+                
+                # Get node metrics from metrics server
+                try:
+                    node_metrics = self.metrics_v1beta1.get_cluster_custom_object(
+                        group="metrics.k8s.io",
+                        version="v1beta1",
+                        plural="nodes",
+                        name=node_name
+                    )
                     
-                    if 'api' in name:
-                        hpa_metrics['api'] = replicas
-                    elif 'frontend' in name:
-                        hpa_metrics['frontend'] = replicas
-                    elif 'guacd' in name:
-                        hpa_metrics['guacd'] = replicas
+                    cpu_usage = self._parse_cpu(node_metrics['usage']['cpu'])
+                    memory_usage = self._parse_memory(node_metrics['usage']['memory'])
+                    
+                    # Get allocatable resources
+                    cpu_allocatable = self._parse_cpu(node.status.allocatable['cpu'])
+                    memory_allocatable = self._parse_memory(node.status.allocatable['memory'])
+                    
+                    metrics[node_name] = {
+                        'cpu_usage_cores': cpu_usage,
+                        'memory_usage_bytes': memory_usage,
+                        'cpu_usage_percent': (cpu_usage / cpu_allocatable) * 100,
+                        'memory_usage_percent': (memory_usage / memory_allocatable) * 100,
+                        'cpu_allocatable': cpu_allocatable,
+                        'memory_allocatable': memory_allocatable
+                    }
+                except Exception as e:
+                    logger.warning(f"Could not get metrics for node {node_name}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Error getting node metrics: {e}")
+            
+        return metrics
+    
+    def get_pod_metrics(self, label_selector: str = None) -> Dict[str, Dict[str, Any]]:
+        """Get pod information and metrics"""
+        pods_info = {}
+        try:
+            if label_selector:
+                pods = self.v1.list_namespaced_pod(
+                    namespace=self.namespace,
+                    label_selector=label_selector
+                )
+            else:
+                pods = self.v1.list_namespaced_pod(namespace=self.namespace)
+                
+            for pod in pods.items:
+                pod_name = pod.metadata.name
+                
+                # Fix container status checking
+                container_statuses = pod.status.container_statuses or []
+                ready_containers = [cs for cs in container_statuses if cs.ready]
+                total_containers = len(container_statuses)
+                
+                pods_info[pod_name] = {
+                    'status': pod.status.phase,
+                    'node_name': pod.spec.node_name,
+                    'creation_timestamp': pod.metadata.creation_timestamp,
+                    'labels': pod.metadata.labels or {},
+                    'ready': len(ready_containers) == total_containers and total_containers > 0,
+                    'restart_count': sum(cs.restart_count for cs in container_statuses)
+                }
+                
+                # Try to get pod metrics
+                try:
+                    pod_metrics = self.metrics_v1beta1.get_namespaced_custom_object(
+                        group="metrics.k8s.io",
+                        version="v1beta1",
+                        namespace=self.namespace,
+                        plural="pods",
+                        name=pod_name
+                    )
+                    
+                    for container in pod_metrics.get('containers', []):
+                        container_name = container['name']
+                        cpu_usage = self._parse_cpu(container['usage']['cpu'])
+                        memory_usage = self._parse_memory(container['usage']['memory'])
                         
+                        pods_info[pod_name][f'{container_name}_cpu_usage'] = cpu_usage
+                        pods_info[pod_name][f'{container_name}_memory_usage'] = memory_usage
+                        
+                except Exception as e:
+                    logger.debug(f"Could not get metrics for pod {pod_name}: {e}")
+                    
         except Exception as e:
-            logger.error(f"Error getting HPA metrics: {e}")
+            logger.error(f"Error getting pod metrics: {e}")
             
-        return hpa_metrics
+        return pods_info
     
-    async def deploy_browser_session(self, session):
-        """Deploy a browser session and measure API latency"""
+    def get_hpa_status(self) -> Dict[str, Dict[str, Any]]:
+        """Get HPA status for all HPAs in namespace"""
+        hpa_status = {}
+        try:
+            hpa_v2 = client.AutoscalingV2Api()
+            hpas = hpa_v2.list_namespaced_horizontal_pod_autoscaler(self.namespace)
+            
+            for hpa in hpas.items:
+                hpa_name = hpa.metadata.name
+                hpa_status[hpa_name] = {
+                    'current_replicas': hpa.status.current_replicas or 0,
+                    'desired_replicas': hpa.status.desired_replicas or 0,
+                    'min_replicas': hpa.spec.min_replicas or 0,
+                    'max_replicas': hpa.spec.max_replicas or 0,
+                    'target_ref': hpa.spec.scale_target_ref.name,
+                    'current_metrics': []
+                }
+                
+                if hpa.status.current_metrics:
+                    for metric in hpa.status.current_metrics:
+                        if metric.resource:
+                            hpa_status[hpa_name]['current_metrics'].append({
+                                'type': 'resource',
+                                'name': metric.resource.name,
+                                'current_utilization': metric.resource.current.average_utilization
+                            })
+                        elif metric.pods:
+                            hpa_status[hpa_name]['current_metrics'].append({
+                                'type': 'pods',
+                                'name': metric.pods.metric.name,
+                                'current_value': metric.pods.current.average_value
+                            })
+                            
+        except Exception as e:
+            logger.error(f"Error getting HPA status: {e}")
+            
+        return hpa_status
+    
+    @staticmethod
+    def _parse_cpu(cpu_str: str) -> float:
+        """Parse CPU string to cores"""
+        if cpu_str.endswith('n'):
+            return float(cpu_str[:-1]) / 1e9
+        elif cpu_str.endswith('u'):
+            return float(cpu_str[:-1]) / 1e6
+        elif cpu_str.endswith('m'):
+            return float(cpu_str[:-1]) / 1000
+        else:
+            return float(cpu_str)
+    
+    @staticmethod
+    def _parse_memory(memory_str: str) -> float:
+        """Parse memory string to bytes"""
+        units = {'Ki': 1024, 'Mi': 1024**2, 'Gi': 1024**3, 'Ti': 1024**4}
+        for unit, multiplier in units.items():
+            if memory_str.endswith(unit):
+                return float(memory_str[:-len(unit)]) * multiplier
+        return float(memory_str)
+
+class WebSocketTester:
+    """Test WebSocket connections"""
+    
+    def __init__(self, url: str, timeout: int = 30):
+        self.url = url
+        self.timeout = timeout
+        self.connection_time = None
+        self.error = None
+        
+    def test_connection(self) -> float:
+        """Test WebSocket connection and return connection time"""
         start_time = time.time()
-        
         try:
-            payload = {"width": "1024", "height": "768"}
-            
-            async with session.post(
-                f"{self.api_base_url}/test/deploy-browser",
-                json=payload,
-                ssl=self.ssl_context,
-                timeout=aiohttp.ClientTimeout(total=30)
-            ) as response:
-                response_data = await response.json()
-                api_latency = time.time() - start_time
-                
-                if response.status == 200:
-                    connection_id = response_data.get('connection_id')
-                    if connection_id:
-                        self.active_connections[connection_id] = {
-                            'created_at': datetime.now(),
-                            'pod_name': response_data.get('podName'),
-                            'status': response_data.get('status', 'unknown')
-                        }
-                        logger.info(f"Deployed browser session: {connection_id}")
-                        return connection_id, api_latency
-                
-                return None, api_latency
-                
+            ws = websocket.create_connection(self.url, timeout=self.timeout)
+            self.connection_time = time.time() - start_time
+            ws.close()
+            return self.connection_time
         except Exception as e:
-            api_latency = time.time() - start_time
-            logger.error(f"Error deploying browser session: {e}")
-            return None, api_latency
+            self.error = str(e)
+            return -1
+
+class BrowserSimulator:
+    """Simulate browser sessions using Selenium"""
     
-    async def get_websocket_info(self, session, connection_id):
-        """Get websocket connection information"""
-        start_time = time.time()
+    def __init__(self, config: BenchmarkConfig, session_id: str):
+        self.config = config
+        self.session_id = session_id
+        self.driver = None
+        self.metrics = SessionMetrics(session_id=session_id, start_time=datetime.now())
+        
+    def setup_driver(self):
+        """Setup Chrome driver with options"""
+        chrome_options = Options()
+        # chrome_options.add_argument('--headless')  # Commented out to show browser window
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--start-maximized')  # Start with maximized window
+        chrome_options.add_argument('--disable-extensions')  # Disable extensions for faster startup
+        chrome_options.add_argument('--disable-plugins')   # Disable plugins for faster startup
+        chrome_options.add_argument('--disable-images')    # Disable image loading for faster page loads
         
         try:
-            async with session.get(
-                f"{self.api_base_url}/test/connect/{connection_id}",
-                ssl=self.ssl_context,
-                timeout=aiohttp.ClientTimeout(total=10)
-            ) as response:
-                api_latency = time.time() - start_time
-                
-                if response.status == 200:
-                    response_data = await response.json()
-                    if response_data.get('status') == 'ready':
-                        websocket_url = response_data.get('websocket_url')
-                        return websocket_url, api_latency
-                
-                return None, api_latency
-                
+            self.driver = webdriver.Chrome(options=chrome_options)
+            self.driver.set_page_load_timeout(self.config.api_timeout)
+            
+            # Minimal wait after browser initiation - prioritize quick start
+            logger.debug(f"Session {self.session_id}: Browser initiated, starting immediately")
+            time.sleep(0.5)  # Minimal wait for browser stability
+            
+            return True
         except Exception as e:
-            api_latency = time.time() - start_time
-            logger.error(f"Error getting websocket info for {connection_id}: {e}")
-            return None, api_latency
+            self.metrics.errors.append(f"Driver setup failed: {e}")
+            return False
     
-    async def connect_websocket(self, websocket_url):
-        """DEPRECATED: Use connect_websocket_websocat instead"""
-        logger.warning("connect_websocket is deprecated, using websocat CLI implementation")
-        return 0
-    
-    async def connect_websocket_websocat(self, websocket_url, connection_id):
-        """Connect to websocket using websocat subprocess"""
-        ws_start_time = time.time()
+    def run_session(self) -> SessionMetrics:
+        """Run a complete browser session simulation"""
+        logger.info(f"Session {self.session_id}: Starting session")
         
+        if not self.setup_driver():
+            self.metrics.end_time = datetime.now()
+            return self.metrics
+            
         try:
-            uri = f"wss://172.18.120.152:30006{websocket_url}"
+            # Navigate to application immediately
+            logger.info(f"Session {self.session_id}: Navigating to {self.config.target_url}")
+            start_time = time.time()
+            self.driver.get(self.config.target_url)
+            self.metrics.total_api_calls += 1
             
-            # Construct websocat command exactly as in documentation
-            websocat_cmd = [
-                "websocat",
-                "--insecure",
-                uri,
-                "-H", "Sec-WebSocket-Protocol: guacamole"
-            ]
+            # Wait for page load with shorter timeout
+            WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
+            logger.info(f"Session {self.session_id}: Page loaded, starting interactions")
             
-            logger.info(f"Starting websocat for connection {connection_id}: {' '.join(websocat_cmd)}")
+            # Start interactions immediately - no additional wait
+            self._simulate_user_interactions()
             
-            # Start websocat process with proper stdio handling
-            process = await asyncio.create_subprocess_exec(
-                *websocat_cmd,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+        except Exception as e:
+            self.metrics.errors.append(f"Session error: {e}")
+            self.metrics.failed_api_calls += 1
+            logger.error(f"Session {self.session_id}: Error - {e}")
+        finally:
+            # Don't quit the driver automatically - keep window open
+            # if self.driver:
+            #     self.driver.quit()
+            self.metrics.end_time = datetime.now()
+            
+        return self.metrics
+    
+    def _simulate_user_interactions(self):
+        """Simulate the user interactions from the test"""
+        try:
+            # Minimal wait for page stability - prioritize immediate interaction
+            logger.debug(f"Session {self.session_id}: Starting click simulation immediately")
+            time.sleep(0.5)  # Very short wait for DOM stability
+            
+            # Click first element if available - start timing immediately
+            first_click_start = time.time()
+            logger.info(f"Session {self.session_id}: Attempting first click")
+            
+            element = WebDriverWait(self.driver, 8).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, ".mb-6:nth-child(1) .ml-3"))
+            )
+            element.click()
+            self.metrics.first_click_response_time = time.time() - first_click_start
+            self.metrics.total_api_calls += 1
+            logger.info(f"Session {self.session_id}: First click completed in {self.metrics.first_click_response_time:.3f}s")
+            
+            # Short wait before next interaction
+            time.sleep(0.5)
+            
+            # Click first py-2 button
+            logger.info(f"Session {self.session_id}: Looking for py-2 elements")
+            py2_elements = self.driver.find_elements(By.CSS_SELECTOR, ".py-2")
+            if py2_elements and py2_elements[0].is_enabled() and py2_elements[0].is_displayed():
+                py2_elements[0].click()
+                self.metrics.total_api_calls += 1
+                logger.info(f"Session {self.session_id}: Clicked first py-2 button")
+                time.sleep(0.5)
+                
+                # Check for second py-2 button or wait like in selenium test
+                py2_elements_after = self.driver.find_elements(By.CSS_SELECTOR, ".py-2")
+                if len(py2_elements_after) > 1:
+                    # Multiple py-2 elements found, click the second one
+                    if py2_elements_after[1].is_enabled() and py2_elements_after[1].is_displayed():
+                        py2_elements_after[1].click()
+                        self.metrics.total_api_calls += 1
+                        logger.info(f"Session {self.session_id}: Successfully clicked second py-2 button")
+                else:
+                    # Keep window open like in selenium test - long sleep to prevent auto-close
+                    logger.info(f"Session {self.session_id}: Keeping browser window open...")
+                    time.sleep(9999999999999999999)  # Long sleep to keep window open
+            else:
+                logger.warning(f"Session {self.session_id}: No py-2 elements found or not clickable")
+                    
+        except TimeoutException:
+            self.metrics.errors.append("Timeout waiting for elements")
+            self.metrics.failed_api_calls += 1
+            logger.error(f"Session {self.session_id}: Timeout waiting for elements")
+        except Exception as e:
+            self.metrics.errors.append(f"Interaction error: {e}")
+            self.metrics.failed_api_calls += 1
+            logger.error(f"Session {self.session_id}: Interaction error - {e}")
+    
+    def close_driver(self):
+        """Manually close the driver when needed"""
+        if self.driver:
+            self.driver.quit()
+            self.driver = None
+
+class SessionsAPIMonitor:
+    """Monitor active sessions via API endpoint"""
+    
+    def __init__(self, api_url: str, insecure: bool = False, timeout: int = 10):
+        self.api_url = api_url
+        self.timeout = timeout
+        self.session = requests.Session()
+        
+        if insecure:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            self.session.verify = False
+    
+    def get_active_sessions(self) -> Dict[str, Any]:
+        """Get active sessions from API endpoint"""
+        try:
+            response = self.session.get(self.api_url, timeout=self.timeout)
+            response.raise_for_status()
+            data = response.json()
+            
+            return {
+                'active_sessions': data.get('active_sessions', 0),
+                'connection_ids': data.get('connection_ids', []),
+                'total_connections': len(data.get('connection_ids', [])),
+                'timestamp': datetime.now()
+            }
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Failed to fetch sessions data from API: {e}")
+            return {
+                'active_sessions': 0,
+                'connection_ids': [],
+                'total_connections': 0,
+                'timestamp': datetime.now(),
+                'error': str(e)
+            }
+        except Exception as e:
+            logger.error(f"Error parsing sessions API response: {e}")
+            return {
+                'active_sessions': 0,
+                'connection_ids': [],
+                'total_connections': 0,
+                'timestamp': datetime.now(),
+                'error': str(e)
+            }
+
+class MetricsCollector:
+    """Collect and store all metrics during benchmark"""
+    
+    def __init__(self, config: BenchmarkConfig):
+        self.config = config
+        self.k8s_monitor = KubernetesMonitor(config.namespace, config.kubeconfig_path)
+        self.sessions_monitor = None
+        
+        if config.enable_sessions_monitoring and config.sessions_api_url:
+            self.sessions_monitor = SessionsAPIMonitor(
+                config.sessions_api_url,
+                config.sessions_api_insecure,
+                config.api_timeout
             )
             
-            connection_time = time.time() - ws_start_time
-            self.websocket_connection_times.append(connection_time)
+        self.metrics_data = {
+            'timestamps': [],
+            'node_metrics': {},
+            'pod_counts': [],
+            'hpa_metrics': {},
+            'session_metrics': [],
+            'websocket_metrics': [],
+            'api_latency': [],
+            'api_sessions': []  # New field for API sessions data
+        }
+        self.running = False
+        
+    def start_collection(self):
+        """Start metrics collection in background thread"""
+        self.running = True
+        self.collection_thread = threading.Thread(target=self._collect_loop)
+        self.collection_thread.daemon = True
+        self.collection_thread.start()
+        
+    def stop_collection(self):
+        """Stop metrics collection"""
+        self.running = False
+        if hasattr(self, 'collection_thread'):
+            self.collection_thread.join(timeout=5)
             
-            # Store process info
-            process_info = {
-                'process': process,
-                'connection_id': connection_id,
-                'start_time': datetime.now(),
-                'connection_time': connection_time,
-                'websocket_url': websocket_url
-            }
-            self.websocket_processes.append(process_info)
+    def _collect_loop(self):
+        """Main collection loop"""
+        while self.running:
+            timestamp = datetime.now()
+            self.metrics_data['timestamps'].append(timestamp)
             
-            logger.info(f"WebSocket connected via websocat in {connection_time:.2f}s for {connection_id}")
-            
-            # Monitor the process in background
-            asyncio.create_task(self.monitor_websocat_process(process_info))
-            
-            return connection_time
+            try:
+                # Collect node metrics
+                node_metrics = self.k8s_monitor.get_node_metrics()
+                for node_name, metrics in node_metrics.items():
+                    if node_name not in self.metrics_data['node_metrics']:
+                        self.metrics_data['node_metrics'][node_name] = {
+                            'cpu_usage': [], 'memory_usage': [], 
+                            'cpu_percent': [], 'memory_percent': []
+                        }
                     
-        except Exception as e:
-            connection_time = time.time() - ws_start_time
-            logger.error(f"WebSocket connection error for {connection_id}: {e}")
-            return connection_time
-    
-    async def monitor_websocat_process(self, process_info):
-        """Monitor websocat process and handle its lifecycle"""
-        process = process_info['process']
-        connection_id = process_info['connection_id']
-        
-        try:
-            # Read initial output to confirm connection
-            try:
-                stdout_data = await asyncio.wait_for(process.stdout.read(1024), timeout=5)
-                if stdout_data:
-                    logger.info(f"WebSocket data received for {connection_id}: {len(stdout_data)} bytes")
-            except asyncio.TimeoutError:
-                logger.info(f"No initial data from WebSocket {connection_id} (normal for some connections)")
-            
-            # Wait for process to complete or timeout
-            await asyncio.wait_for(process.wait(), timeout=300)  # 5 minute timeout
-            
-            if process.returncode == 0:
-                logger.info(f"WebSocket process completed successfully for {connection_id}")
-            else:
-                stderr_output = await process.stderr.read()
-                logger.warning(f"WebSocket process failed for {connection_id}: {stderr_output.decode()}")
-                
-        except asyncio.TimeoutError:
-            logger.info(f"WebSocket process timeout for {connection_id}, terminating")
-            try:
-                process.terminate()
-                await asyncio.wait_for(process.wait(), timeout=10)
-            except:
-                process.kill()
-        except Exception as e:
-            logger.error(f"Error monitoring websocat process for {connection_id}: {e}")
-        finally:
-            # Remove from active processes
-            self.websocket_processes = [p for p in self.websocket_processes if p['connection_id'] != connection_id]
-            logger.info(f"Removed process for connection {connection_id}. Active processes: {len(self.websocket_processes)}")
-    
-    async def create_concurrent_sessions(self, num_sessions=5):
-        """Create multiple concurrent browser sessions with websocat connections"""
-        logger.info(f"Starting concurrent creation of {num_sessions} sessions")
-        
-        async with aiohttp.ClientSession() as session:
-            # Phase 1: Deploy all browser sessions concurrently
-            logger.info("Phase 1: Deploying browser sessions...")
-            deploy_tasks = []
-            for i in range(num_sessions):
-                task = asyncio.create_task(self.deploy_browser_session(session))
-                deploy_tasks.append(task)
-                await asyncio.sleep(0.05)  # Small delay to avoid overwhelming API
-            
-            # Wait for all deployments to complete
-            deploy_results = await asyncio.gather(*deploy_tasks, return_exceptions=True)
-            
-            # Filter successful deployments
-            successful_deployments = []
-            for result in deploy_results:
-                if isinstance(result, tuple) and result[0] is not None:
-                    connection_id, latency = result
-                    successful_deployments.append(connection_id)
-                    self.api_response_times.append(latency)
-            
-            logger.info(f"Phase 1 complete: {len(successful_deployments)}/{num_sessions} browser sessions deployed")
-            
-            if not successful_deployments:
-                logger.warning("No successful deployments, skipping WebSocket connections")
-                return []
-            
-            # Phase 2: Wait for pods to be ready and get websocket URLs
-            logger.info("Phase 2: Waiting for pods to be ready...")
-            websocket_info_tasks = []
-            for connection_id in successful_deployments:
-                task = asyncio.create_task(self.wait_for_websocket_ready(session, connection_id))
-                websocket_info_tasks.append(task)
-            
-            websocket_results = await asyncio.gather(*websocket_info_tasks, return_exceptions=True)
-            
-            # Filter successful websocket info retrievals
-            ready_connections = []
-            for result in websocket_results:
-                if isinstance(result, tuple) and result[0] is not None and result[1] is not None:
-                    connection_id, websocket_url = result
-                    ready_connections.append((connection_id, websocket_url))
-            
-            logger.info(f"Phase 2 complete: {len(ready_connections)}/{len(successful_deployments)} connections ready")
-            
-            if not ready_connections:
-                logger.warning("No ready connections, skipping WebSocket establishment")
-                return []
-            
-            # Phase 3: Establish all websocket connections concurrently
-            logger.info("Phase 3: Establishing WebSocket connections...")
-            websocket_tasks = []
-            for connection_id, websocket_url in ready_connections:
-                task = asyncio.create_task(self.connect_websocket_websocat(websocket_url, connection_id))
-                websocket_tasks.append(task)
-                await asyncio.sleep(0.02)  # Very small delay between websocat starts
-            
-            # Start all websocket connections
-            websocket_connection_results = await asyncio.gather(*websocket_tasks, return_exceptions=True)
-            
-            successful_websockets = len([r for r in websocket_connection_results if not isinstance(r, Exception)])
-            logger.info(f"Phase 3 complete: {successful_websockets}/{len(ready_connections)} websocket connections established")
-            
-            # Log final status
-            total_active_processes = len([p for p in self.websocket_processes if p['process'].returncode is None])
-            logger.info(f"Concurrent session creation finished. Total active WebSocket processes: {total_active_processes}")
-            
-            return ready_connections
-    
-    async def wait_for_websocket_ready(self, session, connection_id, max_wait=60):
-        """Wait for browser pod to be ready and return websocket URL"""
-        wait_time = 0
-        
-        while wait_time < max_wait:
-            await asyncio.sleep(2)
-            wait_time += 2
-            
-            websocket_url, connect_latency = await self.get_websocket_info(session, connection_id)
-            self.api_response_times.append(connect_latency)
-            
-            if websocket_url:
-                return connection_id, websocket_url
-        
-        logger.error(f"Timeout waiting for websocket URL for {connection_id}")
-        return connection_id, None
-    
-    async def deploy_and_connect(self, session, session_id):
-        """Deploy browser session and establish websocket connection - DEPRECATED"""
-        # This method is now replaced by the new concurrent approach
-        logger.warning("deploy_and_connect is deprecated, use create_concurrent_sessions instead")
-        return None
-    
-    def collect_metrics(self):
-        """Collect all metrics periodically"""
-        while True:
-            try:
-                current_time = datetime.now()
-                
-                # Get Kubernetes metrics
-                k8s_metrics = self.get_kubernetes_metrics()
-                
-                # Get active sessions count
-                try:
-                    response = requests.get(
-                        f"{self.api_base_url}/sessions/",
-                        verify=False,
-                        timeout=5
+                    self.metrics_data['node_metrics'][node_name]['cpu_usage'].append(
+                        metrics['cpu_usage_cores']
                     )
-                    if response.status_code == 200:
-                        session_data = response.json()
-                        active_sessions = session_data.get('active_sessions', 0)
-                    else:
-                        active_sessions = 0
-                except:
-                    active_sessions = 0
+                    self.metrics_data['node_metrics'][node_name]['memory_usage'].append(
+                        metrics['memory_usage_bytes'] / (1024**3)  # GB
+                    )
+                    self.metrics_data['node_metrics'][node_name]['cpu_percent'].append(
+                        metrics['cpu_usage_percent']
+                    )
+                    self.metrics_data['node_metrics'][node_name]['memory_percent'].append(
+                        metrics['memory_usage_percent']
+                    )
                 
-                # Count active websocket processes
-                active_websocket_count = len([p for p in self.websocket_processes if p['process'].returncode is None])
+                # Collect pod counts
+                browser_pods = self.k8s_monitor.get_pod_metrics(
+                    label_selector="app=browser-sandbox-test"
+                )
+                running_pods = sum(1 for pod in browser_pods.values() 
+                                 if pod['status'] == 'Running')
+                self.metrics_data['pod_counts'].append(running_pods)
                 
-                # Store metrics
-                self.metrics_data['timestamps'].append(current_time)
-                self.metrics_data['cpu_usage'].append(k8s_metrics['cpu_usage'])
-                self.metrics_data['memory_usage'].append(k8s_metrics['memory_usage'])
-                self.metrics_data['pod_counts'].append(k8s_metrics['pod_count'])
-                self.metrics_data['active_sessions'].append(active_sessions)
-                self.metrics_data['websocket_connections'].append(active_websocket_count)
+                # Collect sessions API data
+                if self.sessions_monitor:
+                    sessions_data = self.sessions_monitor.get_active_sessions()
+                    self.metrics_data['api_sessions'].append(sessions_data)
                 
-                # Store HPA metrics
-                for component, replicas in k8s_metrics['hpa_metrics'].items():
-                    self.metrics_data['hpa_replicas'][component].append(replicas)
+                # Collect HPA metrics
+                hpa_status = self.k8s_monitor.get_hpa_status()
+                for hpa_name, status in hpa_status.items():
+                    if hpa_name not in self.metrics_data['hpa_metrics']:
+                        self.metrics_data['hpa_metrics'][hpa_name] = {
+                            'current_replicas': [], 'desired_replicas': [],
+                            'cpu_utilization': [], 'memory_utilization': []
+                        }
+                    
+                    self.metrics_data['hpa_metrics'][hpa_name]['current_replicas'].append(
+                        status['current_replicas']
+                    )
+                    self.metrics_data['hpa_metrics'][hpa_name]['desired_replicas'].append(
+                        status['desired_replicas']
+                    )
+                    
+                    # Extract CPU and memory utilization
+                    cpu_util = next((m['current_utilization'] for m in status['current_metrics'] 
+                                   if m['type'] == 'resource' and m['name'] == 'cpu'), 0)
+                    memory_util = next((m['current_utilization'] for m in status['current_metrics'] 
+                                      if m['type'] == 'resource' and m['name'] == 'memory'), 0)
+                    
+                    self.metrics_data['hpa_metrics'][hpa_name]['cpu_utilization'].append(cpu_util)
+                    self.metrics_data['hpa_metrics'][hpa_name]['memory_utilization'].append(memory_util)
                 
-                # Store API latency (average of recent measurements)
-                if self.api_response_times:
-                    avg_latency = np.mean(list(self.api_response_times)[-10:])  # Last 10 measurements
-                    self.metrics_data['api_latency'].append(avg_latency)
-                else:
-                    self.metrics_data['api_latency'].append(0)
-                
-                logger.info(f"Metrics collected - CPU: {k8s_metrics['cpu_usage']:.2f}, "
-                          f"Memory: {k8s_metrics['memory_usage']:.2f}MB, "
-                          f"Pods: {k8s_metrics['pod_count']}, "
-                          f"Sessions: {active_sessions}, "
-                          f"WebSocket Processes: {active_websocket_count}")
+                logger.debug(f"Collected metrics at {timestamp}")
                 
             except Exception as e:
                 logger.error(f"Error collecting metrics: {e}")
-            
-            time.sleep(10)  # Collect metrics every 10 seconds
+                
+            time.sleep(self.config.polling_interval)
     
-    def save_current_visualization(self, suffix=""):
-        """Save current visualization to file"""
-        try:
-            timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f'kubebrowse_metrics_{timestamp_str}{suffix}.png'
-            filepath = os.path.join(self.plots_dir, filename)
-            
-            # Create a new figure for saving (to avoid interfering with live plot)
-            save_fig, save_axes = plt.subplots(2, 3, figsize=(20, 12))
-            save_fig.suptitle(f'KubeBrowse Performance Metrics - {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', fontsize=16)
-            
-            if not self.metrics_data['timestamps']:
-                save_fig.text(0.5, 0.5, 'No data available yet', ha='center', va='center', fontsize=16)
-                save_fig.savefig(filepath, dpi=300, bbox_inches='tight')
-                plt.close(save_fig)
-                return filepath
-            
-            timestamps = list(self.metrics_data['timestamps'])
-            
-            # CPU Usage
-            save_axes[0, 0].plot(timestamps, list(self.metrics_data['cpu_usage']), 'b-', linewidth=2)
-            save_axes[0, 0].set_title('CPU Usage (Cores)')
-            save_axes[0, 0].set_ylabel('CPU Cores')
-            save_axes[0, 0].grid(True)
-            save_axes[0, 0].tick_params(axis='x', rotation=45)
-            
-            # Memory Usage
-            save_axes[0, 1].plot(timestamps, list(self.metrics_data['memory_usage']), 'g-', linewidth=2)
-            save_axes[0, 1].set_title('Memory Usage (MB)')
-            save_axes[0, 1].set_ylabel('Memory (MB)')
-            save_axes[0, 1].grid(True)
-            save_axes[0, 1].tick_params(axis='x', rotation=45)
-            
-            # Pod Counts
-            save_axes[0, 2].plot(timestamps, list(self.metrics_data['pod_counts']), 'r-', linewidth=2, marker='o')
-            save_axes[0, 2].set_title('Browser Pod Count')
-            save_axes[0, 2].set_ylabel('Number of Pods')
-            save_axes[0, 2].grid(True)
-            save_axes[0, 2].tick_params(axis='x', rotation=45)
-            
-            # API Latency
-            save_axes[1, 0].plot(timestamps, list(self.metrics_data['api_latency']), 'm-', linewidth=2)
-            save_axes[1, 0].set_title('API Response Latency')
-            save_axes[1, 0].set_ylabel('Latency (seconds)')
-            save_axes[1, 0].grid(True)
-            save_axes[1, 0].tick_params(axis='x', rotation=45)
-            
-            # HPA Replicas
-            for component, data in self.metrics_data['hpa_replicas'].items():
-                if data:
-                    save_axes[1, 1].plot(timestamps, list(data), linewidth=2, marker='s', label=component)
-            save_axes[1, 1].set_title('HPA Replica Counts')
-            save_axes[1, 1].set_ylabel('Number of Replicas')
-            save_axes[1, 1].legend()
-            save_axes[1, 1].grid(True)
-            save_axes[1, 1].tick_params(axis='x', rotation=45)
-            
-            # WebSocket Connections and Active Sessions
-            save_axes[1, 2].plot(timestamps, list(self.metrics_data['websocket_connections']), 
-                          'c-', linewidth=2, marker='^', label='WebSocket Connections')
-            save_axes[1, 2].plot(timestamps, list(self.metrics_data['active_sessions']), 
-                          'orange', linewidth=2, marker='v', label='Active Sessions')
-            save_axes[1, 2].set_title('Connections & Sessions')
-            save_axes[1, 2].set_ylabel('Count')
-            save_axes[1, 2].legend()
-            save_axes[1, 2].grid(True)
-            save_axes[1, 2].tick_params(axis='x', rotation=45)
-            
-            # Format x-axis for all subplots
-            for ax_row in save_axes:
-                for ax in ax_row:
-                    if timestamps:
-                        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
-                        ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=1))
-            
-            save_fig.tight_layout()
-            save_fig.savefig(filepath, dpi=300, bbox_inches='tight')
-            plt.close(save_fig)
-            
-            logger.info(f"Visualization saved to {filepath}")
-            return filepath
-            
-        except Exception as e:
-            logger.error(f"Error saving visualization: {e}")
-            return None
+    def add_session_metrics(self, session_metrics: SessionMetrics):
+        """Add session metrics to collection"""
+        self.metrics_data['session_metrics'].append(asdict(session_metrics))
     
-    def create_final_comprehensive_report(self):
-        """Create a comprehensive final report with multiple visualizations"""
-        try:
-            if not self.metrics_data['timestamps']:
-                logger.warning("No data available for comprehensive report")
-                return
+    def save_metrics(self, filename: str = None):
+        """Save all collected metrics to file"""
+        if filename is None:
+            filename = f"kubebrowse_metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             
-            timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-            
-            # Create comprehensive dashboard
-            fig = plt.figure(figsize=(24, 16))
-            fig.suptitle(f'KubeBrowse Comprehensive Performance Report\n'
-                        f'Test Duration: {datetime.now() - self.start_time}\n'
-                        f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 
-                        fontsize=20, y=0.98)
-            
-            timestamps = list(self.metrics_data['timestamps'])
-            
-            # Create subplots with custom layout
-            gs = fig.add_gridspec(4, 3, hspace=0.3, wspace=0.3)
-            
-            # Resource Usage Over Time
-            ax1 = fig.add_subplot(gs[0, 0])
-            ax1.plot(timestamps, list(self.metrics_data['cpu_usage']), 'b-', linewidth=2, label='CPU (cores)')
-            ax1.set_title('CPU Usage Over Time')
-            ax1.set_ylabel('CPU Cores')
-            ax1.grid(True)
-            ax1.tick_params(axis='x', rotation=45)
-            
-            ax2 = fig.add_subplot(gs[0, 1])
-            ax2.plot(timestamps, list(self.metrics_data['memory_usage']), 'g-', linewidth=2)
-            ax2.set_title('Memory Usage Over Time')
-            ax2.set_ylabel('Memory (MB)')
-            ax2.grid(True)
-            ax2.tick_params(axis='x', rotation=45)
-            
-            # Scaling Metrics
-            ax3 = fig.add_subplot(gs[0, 2])
-            ax3.plot(timestamps, list(self.metrics_data['pod_counts']), 'r-', linewidth=2, marker='o')
-            ax3.set_title('Browser Pod Scaling')
-            ax3.set_ylabel('Number of Pods')
-            ax3.grid(True)
-            ax3.tick_params(axis='x', rotation=45)
-            
-            # Performance Metrics
-            ax4 = fig.add_subplot(gs[1, 0])
-            ax4.plot(timestamps, list(self.metrics_data['api_latency']), 'm-', linewidth=2)
-            ax4.set_title('API Response Latency')
-            ax4.set_ylabel('Latency (seconds)')
-            ax4.grid(True)
-            ax4.tick_params(axis='x', rotation=45)
-            
-            # HPA Metrics
-            ax5 = fig.add_subplot(gs[1, 1])
-            colors = ['blue', 'red', 'green']
-            for i, (component, data) in enumerate(self.metrics_data['hpa_replicas'].items()):
-                if data:
-                    ax5.plot(timestamps, list(data), linewidth=2, marker='s', 
-                            label=f'{component.title()} HPA', color=colors[i])
-            ax5.set_title('HPA Replica Counts')
-            ax5.set_ylabel('Number of Replicas')
-            ax5.legend()
-            ax5.grid(True)
-            ax5.tick_params(axis='x', rotation=45)
-            
-            # Connection Metrics
-            ax6 = fig.add_subplot(gs[1, 2])
-            ax6.plot(timestamps, list(self.metrics_data['websocket_connections']), 
-                    'c-', linewidth=2, marker='^', label='WebSocket Connections')
-            ax6.plot(timestamps, list(self.metrics_data['active_sessions']), 
-                    'orange', linewidth=2, marker='v', label='Active Sessions')
-            ax6.set_title('Connection & Session Metrics')
-            ax6.set_ylabel('Count')
-            ax6.legend()
-            ax6.grid(True)
-            ax6.tick_params(axis='x', rotation=45)
-            
-            # Performance Distribution Charts
-            if self.api_response_times:
-                ax7 = fig.add_subplot(gs[2, 0])
-                ax7.hist(list(self.api_response_times), bins=30, alpha=0.7, color='purple')
-                ax7.set_title('API Response Time Distribution')
-                ax7.set_xlabel('Response Time (seconds)')
-                ax7.set_ylabel('Frequency')
-                ax7.grid(True, alpha=0.3)
-            
-            if self.websocket_connection_times:
-                ax8 = fig.add_subplot(gs[2, 1])
-                ax8.hist(list(self.websocket_connection_times), bins=20, alpha=0.7, color='teal')
-                ax8.set_title('WebSocket Connection Time Distribution')
-                ax8.set_xlabel('Connection Time (seconds)')
-                ax8.set_ylabel('Frequency')
-                ax8.grid(True, alpha=0.3)
-            
-            # Summary Statistics
-            ax9 = fig.add_subplot(gs[2, 2])
-            ax9.axis('off')
-            
-            # Calculate statistics
-            cpu_data = list(self.metrics_data['cpu_usage'])
-            memory_data = list(self.metrics_data['memory_usage'])
-            pod_data = list(self.metrics_data['pod_counts'])
-            latency_data = list(self.metrics_data['api_latency'])
-            
-            stats_text = f"""Performance Summary
-            
-CPU Usage:
-  Average: {np.mean(cpu_data):.2f} cores
-  Peak: {np.max(cpu_data):.2f} cores
-  
-Memory Usage:
-  Average: {np.mean(memory_data):.1f} MB
-  Peak: {np.max(memory_data):.1f} MB
-  
-Pod Scaling:
-  Average: {np.mean(pod_data):.1f} pods
-  Maximum: {np.max(pod_data)} pods
-  
-API Latency:
-  Average: {np.mean(latency_data):.3f}s
-  95th Percentile: {np.percentile(latency_data, 95):.3f}s
-  
-Test Duration: {datetime.now() - self.start_time}
-Total Measurements: {len(timestamps)}
-"""
-            ax9.text(0.1, 0.9, stats_text, transform=ax9.transAxes, fontsize=12,
-                    verticalalignment='top', fontfamily='monospace',
-                    bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.8))
-            
-            # Combined metrics correlation plot
-            ax10 = fig.add_subplot(gs[3, :])
-            ax10_twin1 = ax10.twinx()
-            ax10_twin2 = ax10.twinx()
-            ax10_twin2.spines['right'].set_position(('outward', 60))
-            
-            line1 = ax10.plot(timestamps, list(self.metrics_data['cpu_usage']), 'b-', linewidth=2, label='CPU Usage')
-            line2 = ax10_twin1.plot(timestamps, list(self.metrics_data['pod_counts']), 'r-', linewidth=2, label='Pod Count')
-            line3 = ax10_twin2.plot(timestamps, list(self.metrics_data['active_sessions']), 'g-', linewidth=2, label='Active Sessions')
-            
-            ax10.set_title('Correlation: CPU Usage vs Pod Scaling vs Active Sessions')
-            ax10.set_xlabel('Time')
-            ax10.set_ylabel('CPU Usage (cores)', color='b')
-            ax10_twin1.set_ylabel('Pod Count', color='r')
-            ax10_twin2.set_ylabel('Active Sessions', color='g')
-            
-            # Combine legends
-            lines = line1 + line2 + line3
-            labels = [l.get_label() for l in lines]
-            ax10.legend(lines, labels, loc='upper left')
-            
-            ax10.grid(True)
-            ax10.tick_params(axis='x', rotation=45)
-            
-            # Format x-axis for all subplots
-            for ax in [ax1, ax2, ax3, ax4, ax5, ax6, ax10]:
-                if timestamps:
-                    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-                    ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=2))
-            
-            # Save comprehensive report
-            comprehensive_path = os.path.join(self.plots_dir, f'comprehensive_report_{timestamp_str}.png')
-            fig.savefig(comprehensive_path, dpi=300, bbox_inches='tight')
-            plt.close(fig)
-            
-            logger.info(f"Comprehensive report saved to {comprehensive_path}")
-            return comprehensive_path
-            
-        except Exception as e:
-            logger.error(f"Error creating comprehensive report: {e}")
-            return None
-    
-    def create_visualizations(self):
-        """Create real-time visualizations"""
-        fig, axes = plt.subplots(2, 3, figsize=(20, 12))
-        fig.suptitle('KubeBrowse Performance Metrics', fontsize=16)
+        # Convert datetime objects to strings for JSON serialization
+        serializable_data = self._make_serializable(self.metrics_data.copy())
         
-        def update_plots(frame):
-            # Check if it's time to save plots
-            if (datetime.now() - self.last_plot_save).total_seconds() >= self.plot_save_interval:
-                self.save_current_visualization(f"_interval_{frame}")
-                self.last_plot_save = datetime.now()
+        with open(filename, 'w') as f:
+            json.dump(serializable_data, f, indent=2)
             
-            if not self.metrics_data['timestamps']:
-                return
-            
-            # Clear all axes
-            for ax_row in axes:
-                for ax in ax_row:
-                    ax.clear()
-            
-            timestamps = list(self.metrics_data['timestamps'])
-            
-            # CPU Usage
-            axes[0, 0].plot(timestamps, list(self.metrics_data['cpu_usage']), 'b-', linewidth=2)
-            axes[0, 0].set_title('CPU Usage (Cores)')
-            axes[0, 0].set_ylabel('CPU Cores')
-            axes[0, 0].grid(True)
-            axes[0, 0].tick_params(axis='x', rotation=45)
-            
-            # Memory Usage
-            axes[0, 1].plot(timestamps, list(self.metrics_data['memory_usage']), 'g-', linewidth=2)
-            axes[0, 1].set_title('Memory Usage (MB)')
-            axes[0, 1].set_ylabel('Memory (MB)')
-            axes[0, 1].grid(True)
-            axes[0, 1].tick_params(axis='x', rotation=45)
-            
-            # Pod Counts
-            axes[0, 2].plot(timestamps, list(self.metrics_data['pod_counts']), 'r-', linewidth=2, marker='o')
-            axes[0, 2].set_title('Browser Pod Count')
-            axes[0, 2].set_ylabel('Number of Pods')
-            axes[0, 2].grid(True)
-            axes[0, 2].tick_params(axis='x', rotation=45)
-            
-            # API Latency
-            axes[1, 0].plot(timestamps, list(self.metrics_data['api_latency']), 'm-', linewidth=2)
-            axes[1, 0].set_title('API Response Latency')
-            axes[1, 0].set_ylabel('Latency (seconds)')
-            axes[1, 0].grid(True)
-            axes[1, 0].tick_params(axis='x', rotation=45)
-            
-            # HPA Replicas
-            for component, data in self.metrics_data['hpa_replicas'].items():
-                if data:
-                    axes[1, 1].plot(timestamps, list(data), linewidth=2, marker='s', label=component)
-            axes[1, 1].set_title('HPA Replica Counts')
-            axes[1, 1].set_ylabel('Number of Replicas')
-            axes[1, 1].legend()
-            axes[1, 1].grid(True)
-            axes[1, 1].tick_params(axis='x', rotation=45)
-            
-            # WebSocket Connections and Active Sessions
-            axes[1, 2].plot(timestamps, list(self.metrics_data['websocket_connections']), 
-                          'c-', linewidth=2, marker='^', label='WebSocket Connections')
-            axes[1, 2].plot(timestamps, list(self.metrics_data['active_sessions']), 
-                          'orange', linewidth=2, marker='v', label='Active Sessions')
-            axes[1, 2].set_title('Connections & Sessions')
-            axes[1, 2].set_ylabel('Count')
-            axes[1, 2].legend()
-            axes[1, 2].grid(True)
-            axes[1, 2].tick_params(axis='x', rotation=45)
-            
-            # Format x-axis for all subplots
-            for ax_row in axes:
-                for ax in ax_row:
-                    if timestamps:
-                        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
-                        ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=1))
-            
-            plt.tight_layout()
-        
-        # Create animation
-        ani = FuncAnimation(fig, update_plots, interval=5000, cache_frame_data=False)
-        
-        # Save initial plot
-        self.save_current_visualization("_initial")
-        
-        return fig, ani
-    
-    def save_metrics_report(self):
-        """Save metrics to CSV and generate summary report"""
-        if not self.metrics_data['timestamps']:
-            logger.warning("No metrics data to save")
-            return
-        
-        # Create DataFrame
-        df_data = {
-            'timestamp': list(self.metrics_data['timestamps']),
-            'cpu_usage': list(self.metrics_data['cpu_usage']),
-            'memory_usage': list(self.metrics_data['memory_usage']),
-            'pod_count': list(self.metrics_data['pod_counts']),
-            'api_latency': list(self.metrics_data['api_latency']),
-            'websocket_connections': list(self.metrics_data['websocket_connections']),
-            'active_sessions': list(self.metrics_data['active_sessions']),
-            'api_replicas': list(self.metrics_data['hpa_replicas']['api']),
-            'frontend_replicas': list(self.metrics_data['hpa_replicas']['frontend']),
-            'guacd_replicas': list(self.metrics_data['hpa_replicas']['guacd'])
-        }
-        
-        df = pd.DataFrame(df_data)
-        
-        # Save to CSV
-        timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'kubebrowse_metrics_{timestamp_str}.csv'
-        df.to_csv(filename, index=False)
-        
-        # Generate summary report
-        report = f"""
-KubeBrowse Performance Report
-============================
-Test Duration: {datetime.now() - self.start_time}
-Report Generated: {datetime.now()}
-
-Performance Summary:
--------------------
-Average CPU Usage: {df['cpu_usage'].mean():.2f} cores
-Peak CPU Usage: {df['cpu_usage'].max():.2f} cores
-Average Memory Usage: {df['memory_usage'].mean():.2f} MB
-Peak Memory Usage: {df['memory_usage'].max():.2f} MB
-
-Scaling Metrics:
----------------
-Average Browser Pods: {df['pod_count'].mean():.1f}
-Maximum Browser Pods: {df['pod_count'].max()}
-Average API Replicas: {df['api_replicas'].mean():.1f}
-Average Frontend Replicas: {df['frontend_replicas'].mean():.1f}
-
-Latency Metrics:
----------------
-Average API Latency: {df['api_latency'].mean():.3f} seconds
-95th Percentile API Latency: {df['api_latency'].quantile(0.95):.3f} seconds
-Average WebSocket Connection Time: {np.mean(self.websocket_connection_times) if self.websocket_connection_times else 0:.3f} seconds
-
-Connection Metrics:
-------------------
-Peak Concurrent WebSocket Connections: {df['websocket_connections'].max()}
-Peak Active Sessions: {df['active_sessions'].max()}
-Total API Response Times Recorded: {len(self.api_response_times)}
-Total WebSocket Connection Times Recorded: {len(self.websocket_connection_times)}
-
-Files Generated:
----------------
-Data File: {filename}
-Plots Directory: {self.plots_dir}
-"""
-        
-        report_filename = f'kubebrowse_report_{timestamp_str}.txt'
-        with open(report_filename, 'w') as f:
-            f.write(report)
-        
         logger.info(f"Metrics saved to {filename}")
-        logger.info(f"Report saved to {report_filename}")
-        print(report)
-        
-        # Create final comprehensive visualization
-        comprehensive_report_path = self.create_final_comprehensive_report()
-        if comprehensive_report_path:
-            logger.info(f"Comprehensive report: {comprehensive_report_path}")
-        
-        # Save final plot
-        final_plot_path = self.save_current_visualization("_final")
-        if final_plot_path:
-            logger.info(f"Final plot: {final_plot_path}")
+        return filename
     
-    async def run_benchmark(self, duration_minutes=10, concurrent_sessions=5, session_interval=30):
-        """Run the complete benchmark test"""
-        logger.info(f"Starting KubeBrowse benchmark for {duration_minutes} minutes")
-        logger.info(f"Concurrent sessions: {concurrent_sessions}, Session interval: {session_interval}s")
+    def _make_serializable(self, obj):
+        """Convert datetime objects to strings for JSON serialization"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, dict):
+            return {key: self._make_serializable(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._make_serializable(item) for item in obj]
+        else:
+            return obj
+
+class PeriodicVisualizationSaver:
+    """Save visualizations at periodic intervals during benchmark"""
+    
+    def __init__(self, metrics_collector: MetricsCollector, config: BenchmarkConfig):
+        self.metrics_collector = metrics_collector
+        self.config = config
+        self.running = False
+        self.save_counter = 0
+        self._lock = threading.Lock()  # Add thread lock for safety
         
-        # Check if websocat is available
-        try:
-            websocat_check = subprocess.run(["websocat", "--version"], capture_output=True, text=True)
-            if websocat_check.returncode != 0:
-                logger.error("websocat is not installed or not in PATH")
-                return
-            logger.info(f"Using websocat: {websocat_check.stdout.strip()}")
-        except FileNotFoundError:
-            logger.error("websocat is not installed. Please install it first.")
+        # Create output directory
+        os.makedirs(self.config.output_dir, exist_ok=True)
+        
+    def start_saving(self):
+        """Start periodic visualization saving in background thread"""
+        if not self.config.save_visualizations:
             return
+            
+        self.running = True
+        self.save_thread = threading.Thread(target=self._save_loop)
+        self.save_thread.daemon = True
+        self.save_thread.start()
+        logger.info(f"Started periodic visualization saving every {self.config.save_interval} seconds")
         
-        # Start metrics collection in background thread
-        metrics_thread = threading.Thread(target=self.collect_metrics, daemon=True)
-        metrics_thread.start()
+    def stop_saving(self):
+        """Stop periodic visualization saving"""
+        self.running = False
+        if hasattr(self, 'save_thread'):
+            self.save_thread.join(timeout=5)
+            
+    def _save_loop(self):
+        """Main saving loop"""
+        while self.running:
+            time.sleep(self.config.save_interval)
+            if self.running:  # Check again after sleep
+                self._save_current_visualizations()
+                
+    def _save_current_visualizations(self):
+        """Save current state visualizations"""
+        with self._lock:  # Thread safety
+            try:
+                self.save_counter += 1
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                snapshot_dir = f"{self.config.output_dir}/snapshot_{self.save_counter:03d}_{timestamp}"
+                os.makedirs(snapshot_dir, exist_ok=True)
+                
+                data = self.metrics_collector.metrics_data
+                
+                # Only save if we have data
+                if not data['timestamps']:
+                    logger.debug("No data available for visualization yet")
+                    return
+                    
+                timestamps = data['timestamps']
+                
+                # Ensure matplotlib is using non-interactive backend
+                plt.ioff()
+                matplotlib.use('Agg')
+                
+                # Create enhanced dashboard visualization with sessions monitoring
+                try:
+                    fig, axes = plt.subplots(3, 3, figsize=(20, 15))
+                    fig.suptitle(f'KubeBrowse Comprehensive Performance Dashboard - {timestamp}', fontsize=16, fontweight='bold')
+                    
+                    # Node CPU Usage
+                    axes[0, 0].set_title('Node CPU Usage (%)')
+                    axes[0, 0].set_xlabel('Time Points')
+                    axes[0, 0].set_ylabel('CPU %')
+                    axes[0, 0].grid(True, alpha=0.3)
+                    
+                    if data['node_metrics']:
+                        time_points = list(range(len(timestamps)))
+                        for node_name, metrics in data['node_metrics'].items():
+                            if metrics['cpu_percent']:
+                                axes[0, 0].plot(time_points[-len(metrics['cpu_percent']):], 
+                                               metrics['cpu_percent'], 
+                                               label=f'{node_name}', marker='o', markersize=3)
+                        axes[0, 0].legend()
+                    
+                    # Node Memory Usage
+                    axes[0, 1].set_title('Node Memory Usage (%)')
+                    axes[0, 1].set_xlabel('Time Points')
+                    axes[0, 1].set_ylabel('Memory %')
+                    axes[0, 1].grid(True, alpha=0.3)
+                    
+                    if data['node_metrics']:
+                        time_points = list(range(len(timestamps)))
+                        for node_name, metrics in data['node_metrics'].items():
+                            if metrics['memory_percent']:
+                                axes[0, 1].plot(time_points[-len(metrics['memory_percent']):], 
+                                               metrics['memory_percent'], 
+                                               label=f'{node_name}', marker='s', markersize=3)
+                        axes[0, 1].legend()
+                    
+                    # Running Pods
+                    axes[0, 2].set_title('Running Pods')
+                    axes[0, 2].set_xlabel('Time Points')
+                    axes[0, 2].set_ylabel('Pod Count')
+                    axes[0, 2].grid(True, alpha=0.3)
+                    
+                    if data['pod_counts']:
+                        time_points = list(range(len(data['pod_counts'])))
+                        axes[0, 2].plot(time_points, data['pod_counts'], 
+                                       color='blue', marker='o', markersize=4)
+                        axes[0, 2].fill_between(time_points, data['pod_counts'], alpha=0.3)
+                    
+                    # API Active Sessions (NEW)
+                    axes[1, 0].set_title('API Active Sessions')
+                    axes[1, 0].set_xlabel('Time Points')
+                    axes[1, 0].set_ylabel('Active Sessions')
+                    axes[1, 0].grid(True, alpha=0.3)
+                    
+                    if data['api_sessions']:
+                        time_points = list(range(len(data['api_sessions'])))
+                        active_sessions = [s.get('active_sessions', 0) for s in data['api_sessions']]
+                        total_connections = [s.get('total_connections', 0) for s in data['api_sessions']]
+                        
+                        axes[1, 0].plot(time_points, active_sessions, 
+                                       color='green', marker='o', markersize=4, label='Active Sessions')
+                        axes[1, 0].plot(time_points, total_connections, 
+                                       color='orange', marker='s', markersize=4, label='Total Connections')
+                        axes[1, 0].legend()
+                        axes[1, 0].fill_between(time_points, active_sessions, alpha=0.3, color='green')
+                    
+                    # Session Summary
+                    axes[1, 1].set_title('Session Summary')
+                    axes[1, 1].set_xlabel('Status')
+                    axes[1, 1].set_ylabel('Count')
+                    axes[1, 1].grid(True, alpha=0.3)
+                    
+                    if data['session_metrics']:
+                        total_sessions = len(data['session_metrics'])
+                        successful_sessions = sum(1 for s in data['session_metrics'] 
+                                                if s.get('failed_api_calls', 0) == 0)
+                        failed_sessions = total_sessions - successful_sessions
+                        
+                        axes[1, 1].bar(['Successful', 'Failed'], 
+                                      [successful_sessions, failed_sessions],
+                                      color=['green', 'red'], alpha=0.7)
+                    
+                    # Response Times
+                    axes[1, 2].set_title('Recent Response Times')
+                    axes[1, 2].set_xlabel('Recent Sessions')
+                    axes[1, 2].set_ylabel('Response Time (s)')
+                    axes[1, 2].grid(True, alpha=0.3)
+                    
+                    if data['session_metrics']:
+                        recent_sessions = data['session_metrics'][-20:]
+                        response_times = [s.get('first_click_response_time', 0) 
+                                        for s in recent_sessions 
+                                        if s.get('first_click_response_time') is not None]
+                        
+                        if response_times:
+                            axes[1, 2].plot(range(len(response_times)), response_times, 
+                                           'go-', markersize=4)
+                            axes[1, 2].axhline(y=np.mean(response_times), 
+                                              color='red', linestyle='--', 
+                                              label=f'Avg: {np.mean(response_times):.2f}s')
+                            axes[1, 2].legend()
+                    
+                    # HPA Replica Counts (NEW)
+                    axes[2, 0].set_title('HPA Replica Counts')
+                    axes[2, 0].set_xlabel('Time Points')
+                    axes[2, 0].set_ylabel('Replicas')
+                    axes[2, 0].grid(True, alpha=0.3)
+                    
+                    if data['hpa_metrics']:
+                        time_points = list(range(len(timestamps)))
+                        for hpa_name, metrics in data['hpa_metrics'].items():
+                            if metrics['current_replicas']:
+                                axes[2, 0].plot(time_points[-len(metrics['current_replicas']):], 
+                                               metrics['current_replicas'], 
+                                               label=f'{hpa_name} Current', marker='o', markersize=3)
+                                axes[2, 0].plot(time_points[-len(metrics['desired_replicas']):], 
+                                               metrics['desired_replicas'], 
+                                               label=f'{hpa_name} Desired', marker='s', markersize=3, linestyle='--')
+                        axes[2, 0].legend()
+                    
+                    # API vs Browser Sessions Correlation (NEW)
+                    axes[2, 1].set_title('API vs Browser Sessions')
+                    axes[2, 1].set_xlabel('Time Points')
+                    axes[2, 1].set_ylabel('Session Count')
+                    axes[2, 1].grid(True, alpha=0.3)
+                    
+                    if data['api_sessions'] and data['session_metrics']:
+                        time_points = list(range(min(len(data['api_sessions']), len(timestamps))))
+                        api_sessions = [data['api_sessions'][i].get('active_sessions', 0) for i in range(len(time_points))]
+                        
+                        # Calculate browser sessions over time (cumulative)
+                        browser_sessions_count = []
+                        for i in range(len(time_points)):
+                            # Count sessions active at this time point
+                            if i < len(timestamps):
+                                current_time = timestamps[i]
+                                active_browser_sessions = sum(1 for s in data['session_metrics'] 
+                                                            if datetime.fromisoformat(s['start_time']) <= current_time and 
+                                                               (s.get('end_time') is None or datetime.fromisoformat(s['end_time']) >= current_time))
+                                browser_sessions_count.append(active_browser_sessions)
+                            else:
+                                browser_sessions_count.append(0)
+                        
+                        axes[2, 1].plot(time_points, api_sessions, 
+                                       color='green', marker='o', markersize=4, label='API Active Sessions')
+                        axes[2, 1].plot(time_points, browser_sessions_count, 
+                                       color='blue', marker='s', markersize=4, label='Browser Sessions')
+                        axes[2, 1].legend()
+                    
+                    # Success Rate Over Time
+                    axes[2, 2].set_title('Success Rate Over Time')
+                    axes[2, 2].set_xlabel('Time Buckets')
+                    axes[2, 2].set_ylabel('Success Rate (%)')
+                    axes[2, 2].grid(True, alpha=0.3)
+                    axes[2, 2].set_ylim(0, 105)
+                    
+                    if data['session_metrics'] and len(data['session_metrics']) > 5:
+                        bucket_size = max(1, len(data['session_metrics']) // 10)
+                        success_rates = []
+                        
+                        for i in range(0, len(data['session_metrics']), bucket_size):
+                            bucket = data['session_metrics'][i:i+bucket_size]
+                            total_calls = sum(s.get('total_api_calls', 0) for s in bucket)
+                            failed_calls = sum(s.get('failed_api_calls', 0) for s in bucket)
+                            
+                            if total_calls > 0:
+                                success_rate = ((total_calls - failed_calls) / total_calls) * 100
+                                success_rates.append(success_rate)
+                        
+                        if success_rates:
+                            axes[2, 2].plot(range(len(success_rates)), success_rates, 
+                                           'b-o', markersize=4)
+                            axes[2, 2].axhline(y=np.mean(success_rates), 
+                                              color='green', linestyle='--', 
+                                              label=f'Avg: {np.mean(success_rates):.1f}%')
+                            axes[2, 2].legend()
+                    
+                    plt.tight_layout()
+                    
+                    # Save the dashboard
+                    dashboard_file = f"{snapshot_dir}/dashboard.png"
+                    plt.savefig(dashboard_file, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
+                    
+                    # Properly close the figure to free memory
+                    plt.close(fig)
+                    plt.clf()  # Clear any remaining state
+                    
+                except Exception as plot_error:
+                    logger.error(f"Error creating plot: {plot_error}")
+                    # Try to clean up any partial plot state
+                    try:
+                        plt.close('all')
+                        plt.clf()
+                    except:
+                        pass
+                
+                # Save metrics data snapshot
+                metrics_file = f"{snapshot_dir}/metrics_snapshot.json"
+                serializable_data = self.metrics_collector._make_serializable(data.copy())
+                with open(metrics_file, 'w') as f:
+                    json.dump(serializable_data, f, indent=2)
+                
+                # Create enhanced summary file
+                summary_file = f"{snapshot_dir}/summary.txt"
+                with open(summary_file, 'w') as f:
+                    f.write(f"Benchmark Snapshot - {timestamp}\n")
+                    f.write("=" * 40 + "\n\n")
+                    f.write(f"Timestamp: {timestamp}\n")
+                    f.write(f"Data points collected: {len(timestamps)}\n")
+                    f.write(f"Total sessions: {len(data['session_metrics'])}\n")
+                    f.write(f"Running pods: {data['pod_counts'][-1] if data['pod_counts'] else 0}\n")
+                    
+                    # Add API sessions summary
+                    if data['api_sessions']:
+                        latest_api_data = data['api_sessions'][-1]
+                        f.write(f"API Active Sessions: {latest_api_data.get('active_sessions', 0)}\n")
+                        f.write(f"API Total Connections: {latest_api_data.get('total_connections', 0)}\n")
+                    
+                    if data['session_metrics']:
+                        successful = sum(1 for s in data['session_metrics'] 
+                                       if s.get('failed_api_calls', 0) == 0)
+                        f.write(f"Successful sessions: {successful}\n")
+                        f.write(f"Failed sessions: {len(data['session_metrics']) - successful}\n")
+                        
+                        response_times = [s.get('first_click_response_time') 
+                                        for s in data['session_metrics'] 
+                                        if s.get('first_click_response_time') is not None]
+                        if response_times:
+                            f.write(f"Average response time: {np.mean(response_times):.3f}s\n")
+                            f.write(f"Max response time: {max(response_times):.3f}s\n")
+                
+                logger.info(f"Saved visualization snapshot {self.save_counter} to {snapshot_dir}")
+                
+            except Exception as e:
+                logger.error(f"Error saving visualization snapshot: {e}")
+                # Clean up any matplotlib state on error
+                try:
+                    plt.close('all')
+                    plt.clf()
+                except:
+                    pass
+
+class LoadTestController:
+    """Control the load testing process"""
+    
+    def __init__(self, config: BenchmarkConfig):
+        self.config = config
+        self.metrics_collector = MetricsCollector(config)
+        self.visualization_saver = PeriodicVisualizationSaver(self.metrics_collector, config) if config.save_visualizations else None
+        self.active_sessions = {}
+        self.completed_sessions = []
+        self.running = False
+        self.last_session_start_time = 0  # Track last session start time
         
-        # Start visualization
-        fig, ani = self.create_visualizations()
+    def run_benchmark(self):
+        """Run the complete benchmark test"""
+        logger.info("Starting KubeBrowse benchmark...")
         
-        # Show plots in non-blocking mode
-        plt.ion()
-        plt.show()
+        # Start metrics collection
+        self.metrics_collector.start_collection()
         
-        end_time = datetime.now() + timedelta(minutes=duration_minutes)
-        session_count = 0
+        # Start periodic visualization saving
+        if self.visualization_saver:
+            self.visualization_saver.start_saving()
+        
+        self.running = True
         
         try:
-            while datetime.now() < end_time:
-                logger.info(f"Creating batch {session_count + 1} of {concurrent_sessions} sessions")
+            # Calculate user ramp-up schedule
+            total_time = (self.config.ramp_up_duration + 
+                         self.config.test_duration + 
+                         self.config.ramp_down_duration)
+            
+            user_schedule = self._calculate_user_schedule()
+            
+            # Execute load test
+            with ThreadPoolExecutor(max_workers=self.config.max_concurrent_users * 2) as executor:
+                futures = []
                 
-                # Create concurrent sessions with websocat connections
-                results = await self.create_concurrent_sessions(concurrent_sessions)
-                successful_sessions = len(results)
+                start_time = time.time()
+                for schedule_time, user_count in user_schedule:
+                    # Wait until schedule time
+                    while time.time() - start_time < schedule_time and self.running:
+                        time.sleep(0.1)
+                    
+                    if not self.running:
+                        break
+                        
+                    # Start new sessions to reach target user count with controlled intervals
+                    current_active = len(self.active_sessions)
+                    if user_count > current_active:
+                        new_sessions = user_count - current_active
+                        logger.info(f"Starting {new_sessions} new sessions with {self.config.session_start_interval}s interval")
+                        
+                        for i in range(new_sessions):
+                            # Enforce session start interval
+                            current_time = time.time()
+                            time_since_last_start = current_time - self.last_session_start_time
+                            
+                            if time_since_last_start < self.config.session_start_interval:
+                                wait_time = self.config.session_start_interval - time_since_last_start
+                                logger.debug(f"Waiting {wait_time:.2f}s before starting next session")
+                                time.sleep(wait_time)
+                            
+                            session_id = f"user_{len(self.completed_sessions) + len(self.active_sessions) + i + 1}"
+                            simulator = BrowserSimulator(self.config, session_id)
+                            future = executor.submit(self._run_session, simulator)
+                            futures.append(future)
+                            self.active_sessions[session_id] = future
+                            self.last_session_start_time = time.time()
+                            
+                            logger.info(f"Started session {session_id} at {datetime.now().strftime('%H:%M:%S')}")
+                    
+                    # Clean up completed sessions
+                    self._cleanup_completed_sessions()
+                    
+                    logger.info(f"Active sessions: {len(self.active_sessions)}, "
+                              f"Completed: {len(self.completed_sessions)}")
                 
-                logger.info(f"Successfully created and connected {successful_sessions}/{concurrent_sessions} sessions")
-                session_count += 1
-                
-                # Log current active processes
-                active_processes = len([p for p in self.websocket_processes if p['process'].returncode is None])
-                logger.info(f"Current active WebSocket processes: {active_processes}")
-                
-                # Wait before next batch
-                await asyncio.sleep(session_interval)
-                
-                # Update plot
-                plt.pause(0.1)
-                
+                # Wait for all sessions to complete
+                logger.info("Waiting for all sessions to complete...")
+                for future in as_completed(futures):
+                    try:
+                        session_metrics = future.result()
+                        self.completed_sessions.append(session_metrics)
+                        self.metrics_collector.add_session_metrics(session_metrics)
+                    except Exception as e:
+                        logger.error(f"Session failed: {e}")
+                        
         except KeyboardInterrupt:
             logger.info("Benchmark interrupted by user")
-        
         finally:
-            # Clean up websocket processes
-            logger.info("Cleaning up WebSocket processes...")
-            cleanup_tasks = []
-            for process_info in self.websocket_processes:
-                if process_info['process'].returncode is None:
-                    try:
-                        process_info['process'].terminate()
-                        cleanup_tasks.append(asyncio.create_task(
-                            asyncio.wait_for(process_info['process'].wait(), timeout=5)
-                        ))
-                    except:
-                        process_info['process'].kill()
+            self.running = False
+            self.metrics_collector.stop_collection()
             
-            if cleanup_tasks:
-                await asyncio.gather(*cleanup_tasks, return_exceptions=True)
+            # Stop visualization saving
+            if self.visualization_saver:
+                self.visualization_saver.stop_saving()
             
-            logger.info("WebSocket cleanup completed")
-            
-            # Generate final report
-            self.save_metrics_report()
-            
-            # Keep plots open
-            logger.info("Benchmark completed. Plots will remain open. Press Ctrl+C to exit.")
-            try:
-                plt.ioff()
-                plt.show()
-            except KeyboardInterrupt:
-                pass
-
-async def main():
-    """Main function to run the benchmark"""
-    benchmark = KubeBrowseBenchmark()
+        logger.info(f"Benchmark completed. Total sessions: {len(self.completed_sessions)}")
+        return self.metrics_collector.save_metrics()
     
-    # Configuration
-    DURATION_MINUTES = 15  # Run for 15 minutes
-    CONCURRENT_SESSIONS = 50  # Create 50 sessions at a time
-    SESSION_INTERVAL = 20  # Wait 20 seconds between batches
-    logger.info(f"Running benchmark for {DURATION_MINUTES} minutes with {CONCURRENT_SESSIONS} concurrent sessions.")
-    await benchmark.run_benchmark(
-        duration_minutes=DURATION_MINUTES,
-        concurrent_sessions=CONCURRENT_SESSIONS,
-        session_interval=SESSION_INTERVAL
+    def _calculate_user_schedule(self) -> List[tuple]:
+        """Calculate when to start/stop users during test"""
+        schedule = []
+        
+        # Ramp up phase - more frequent scheduling to respect session intervals
+        ramp_up_steps = max(10, self.config.ramp_up_duration // 30)  # At least every 30 seconds
+        for i in range(ramp_up_steps):
+            time_point = i * (self.config.ramp_up_duration / ramp_up_steps)
+            user_count = int((i + 1) * self.config.max_concurrent_users / ramp_up_steps)
+            schedule.append((time_point, user_count))
+        
+        # Steady state phase
+        steady_start = self.config.ramp_up_duration
+        for i in range(self.config.test_duration // 60):  # Every minute during steady state
+            time_point = steady_start + i * 60
+            schedule.append((time_point, self.config.max_concurrent_users))
+        
+        # Ramp down phase
+        ramp_down_start = self.config.ramp_up_duration + self.config.test_duration
+        ramp_down_steps = max(10, self.config.ramp_down_duration // 30)
+        for i in range(ramp_down_steps):
+            time_point = ramp_down_start + i * (self.config.ramp_down_duration / ramp_down_steps)
+            user_count = int(self.config.max_concurrent_users * 
+                           (1 - (i + 1) / ramp_down_steps))
+            schedule.append((time_point, max(0, user_count)))
+        
+        return schedule
+    
+    def _run_session(self, simulator: BrowserSimulator) -> SessionMetrics:
+        """Run a single browser session"""
+        try:
+            return simulator.run_session()
+        except Exception as e:
+            logger.error(f"Session {simulator.session_id} failed: {e}")
+            simulator.metrics.errors.append(f"Session failed: {e}")
+            simulator.metrics.end_time = datetime.now()
+            return simulator.metrics
+        # Note: Driver is intentionally not closed here to keep windows open
+    
+    def _cleanup_completed_sessions(self):
+        """Remove completed sessions from active tracking"""
+        completed_keys = []
+        for session_id, future in self.active_sessions.items():
+            if future.done():
+                completed_keys.append(session_id)
+                
+        for key in completed_keys:
+            del self.active_sessions[key]
+
+class BenchmarkVisualizer:
+    """Create comprehensive visualizations of benchmark results"""
+    
+    def __init__(self, metrics_file: str):
+        with open(metrics_file, 'r') as f:
+            self.data = json.load(f)
+        self.timestamps = [datetime.fromisoformat(ts) for ts in self.data['timestamps']]
+        
+        # Ensure we're using non-interactive backend
+        matplotlib.use('Agg')
+        plt.ioff()
+        
+    def create_comprehensive_dashboard(self, output_dir: str = "benchmark_results"):
+        """Create all visualizations for the benchmark results"""
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Set style
+        plt.style.use('seaborn-v0_8')
+        sns.set_palette("husl")
+        
+        # Create individual plots
+        self._plot_node_metrics(output_dir)
+        self._plot_pod_scaling(output_dir)
+        self._plot_hpa_metrics(output_dir)
+        self._plot_performance_metrics(output_dir)
+        self._plot_session_analysis(output_dir)
+        self._create_interactive_dashboard(output_dir)
+        self._generate_summary_report(output_dir)
+        
+        # Clean up matplotlib state
+        plt.close('all')
+        plt.clf()
+        
+        logger.info(f"All visualizations saved to {output_dir}/")
+    
+    def _plot_node_metrics(self, output_dir: str):
+        """Plot node CPU and memory usage"""
+        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+        fig.suptitle('Kubernetes Node Resource Usage', fontsize=16, fontweight='bold')
+        
+        for node_name, metrics in self.data['node_metrics'].items():
+            # CPU Usage (Cores)
+            axes[0, 0].plot(self.timestamps, metrics['cpu_usage'], 
+                          label=f'{node_name}', linewidth=2, marker='o', markersize=3)
+            
+            # Memory Usage (GB)
+            axes[0, 1].plot(self.timestamps, metrics['memory_usage'], 
+                          label=f'{node_name}', linewidth=2, marker='s', markersize=3)
+            
+            # CPU Usage (%)
+            axes[1, 0].plot(self.timestamps, metrics['cpu_percent'], 
+                          label=f'{node_name}', linewidth=2, marker='^', markersize=3)
+            
+            # Memory Usage (%)
+            axes[1, 1].plot(self.timestamps, metrics['memory_percent'], 
+                          label=f'{node_name}', linewidth=2, marker='d', markersize=3)
+        
+        # Customize subplots
+        axes[0, 0].set_title('CPU Usage (Cores)', fontweight='bold')
+        axes[0, 0].set_ylabel('CPU Cores')
+        axes[0, 0].legend()
+        axes[0, 0].grid(True, alpha=0.3)
+        
+        axes[0, 1].set_title('Memory Usage (GB)', fontweight='bold')
+        axes[0, 1].set_ylabel('Memory (GB)')
+        axes[0, 1].legend()
+        axes[0, 1].grid(True, alpha=0.3)
+        
+        axes[1, 0].set_title('CPU Usage (%)', fontweight='bold')
+        axes[1, 0].set_ylabel('CPU Utilization (%)')
+        axes[1, 0].set_xlabel('Time')
+        axes[1, 0].legend()
+        axes[1, 0].grid(True, alpha=0.3)
+        
+        axes[1, 1].set_title('Memory Usage (%)', fontweight='bold')
+        axes[1, 1].set_ylabel('Memory Utilization (%)')
+        axes[1, 1].set_xlabel('Time')
+        axes[1, 1].legend()
+        axes[1, 1].grid(True, alpha=0.3)
+        
+        # Format x-axis
+        for ax in axes.flat:
+            ax.tick_params(axis='x', rotation=45)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/node_metrics.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_pod_scaling(self, output_dir: str):
+        """Plot pod scaling over time"""
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        # Plot browser sandbox pods
+        ax.plot(self.timestamps, self.data['pod_counts'], 
+               linewidth=3, marker='o', markersize=6, color='#2E86AB',
+               label='Browser Sandbox Pods')
+        
+        # Add fill area
+        ax.fill_between(self.timestamps, self.data['pod_counts'], 
+                       alpha=0.3, color='#2E86AB')
+        
+        ax.set_title('Browser Sandbox Pod Scaling Over Time', 
+                    fontsize=16, fontweight='bold', pad=20)
+        ax.set_xlabel('Time', fontsize=12)
+        ax.set_ylabel('Number of Running Pods', fontsize=12)
+        ax.legend(fontsize=12)
+        ax.grid(True, alpha=0.3)
+        
+        # Add statistics
+        max_pods = max(self.data['pod_counts'])
+        avg_pods = np.mean(self.data['pod_counts'])
+        ax.axhline(y=avg_pods, color='red', linestyle='--', alpha=0.7, 
+                  label=f'Average: {avg_pods:.1f}')
+        ax.text(0.02, 0.98, f'Max Pods: {max_pods}\nAvg Pods: {avg_pods:.1f}', 
+               transform=ax.transAxes, fontsize=11, verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/pod_scaling.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_hpa_metrics(self, output_dir: str):
+        """Plot HPA scaling metrics"""
+        if not self.data['hpa_metrics']:
+            logger.warning("No HPA metrics available")
+            return
+            
+        n_hpas = len(self.data['hpa_metrics'])
+        fig, axes = plt.subplots(n_hpas, 2, figsize=(16, 6 * n_hpas))
+        if n_hpas == 1:
+            axes = axes.reshape(1, -1)
+        
+        fig.suptitle('HPA Scaling Metrics', fontsize=16, fontweight='bold')
+        
+        for i, (hpa_name, metrics) in enumerate(self.data['hpa_metrics'].items()):
+            # Replica counts
+            axes[i, 0].plot(self.timestamps, metrics['current_replicas'], 
+                          label='Current Replicas', linewidth=2, marker='o', color='#1f77b4')
+            axes[i, 0].plot(self.timestamps, metrics['desired_replicas'], 
+                          label='Desired Replicas', linewidth=2, marker='s', color='#ff7f0e')
+            axes[i, 0].set_title(f'{hpa_name} - Replica Scaling', fontweight='bold')
+            axes[i, 0].set_ylabel('Replicas')
+            axes[i, 0].legend()
+            axes[i, 0].grid(True, alpha=0.3)
+            
+            # Resource utilization
+            axes[i, 1].plot(self.timestamps, metrics['cpu_utilization'], 
+                          label='CPU Utilization %', linewidth=2, marker='^', color='#2ca02c')
+            axes[i, 1].plot(self.timestamps, metrics['memory_utilization'], 
+                          label='Memory Utilization %', linewidth=2, marker='d', color='#d62728')
+            axes[i, 1].axhline(y=50, color='red', linestyle='--', alpha=0.5, label='Target (50%)')
+            axes[i, 1].set_title(f'{hpa_name} - Resource Utilization', fontweight='bold')
+            axes[i, 1].set_ylabel('Utilization (%)')
+            axes[i, 1].legend()
+            axes[i, 1].grid(True, alpha=0.3)
+            
+            # Format x-axis
+            axes[i, 0].tick_params(axis='x', rotation=45)
+            axes[i, 1].tick_params(axis='x', rotation=45)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/hpa_metrics.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_performance_metrics(self, output_dir: str):
+        """Plot performance and latency metrics"""
+        if not self.data['session_metrics']:
+            logger.warning("No session metrics available")
+            return
+            
+        sessions_df = pd.DataFrame(self.data['session_metrics'])
+        
+        # Convert timestamps
+        sessions_df['start_time'] = pd.to_datetime(sessions_df['start_time'])
+        sessions_df['end_time'] = pd.to_datetime(sessions_df['end_time'])
+        sessions_df['duration'] = (sessions_df['end_time'] - sessions_df['start_time']).dt.total_seconds()
+        
+        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+        fig.suptitle('Performance Metrics Analysis', fontsize=16, fontweight='bold')
+        
+        # API Response Time Distribution
+        valid_response_times = sessions_df[sessions_df['first_click_response_time'].notna()]
+        if not valid_response_times.empty:
+            axes[0, 0].hist(valid_response_times['first_click_response_time'], 
+                          bins=30, alpha=0.7, color='skyblue', edgecolor='black')
+            axes[0, 0].axvline(valid_response_times['first_click_response_time'].mean(), 
+                             color='red', linestyle='--', linewidth=2, 
+                             label=f'Mean: {valid_response_times["first_click_response_time"].mean():.2f}s')
+            axes[0, 0].set_title('API Response Time Distribution', fontweight='bold')
+            axes[0, 0].set_xlabel('Response Time (seconds)')
+            axes[0, 0].set_ylabel('Frequency')
+            axes[0, 0].legend()
+            axes[0, 0].grid(True, alpha=0.3)
+        
+        # Session Duration Distribution
+        axes[0, 1].hist(sessions_df['duration'], bins=30, alpha=0.7, 
+                       color='lightgreen', edgecolor='black')
+        axes[0, 1].axvline(sessions_df['duration'].mean(), color='red', 
+                         linestyle='--', linewidth=2, 
+                         label=f'Mean: {sessions_df["duration"].mean():.1f}s')
+        axes[0, 1].set_title('Session Duration Distribution', fontweight='bold')
+        axes[0, 1].set_xlabel('Duration (seconds)')
+        axes[0, 1].set_ylabel('Frequency')
+        axes[0, 1].legend()
+        axes[0, 1].grid(True, alpha=0.3)
+        
+        # Success Rate Over Time
+        sessions_df['success_rate'] = (sessions_df['total_api_calls'] - sessions_df['failed_api_calls']) / sessions_df['total_api_calls']
+        sessions_df['time_bucket'] = pd.cut(sessions_df['start_time'], bins=20)
+        success_by_time = sessions_df.groupby('time_bucket')['success_rate'].mean()
+        
+        axes[1, 0].plot(range(len(success_by_time)), success_by_time.values * 100, 
+                       marker='o', linewidth=2, markersize=6, color='orange')
+        axes[1, 0].set_title('Success Rate Over Time', fontweight='bold')
+        axes[1, 0].set_xlabel('Time Bucket')
+        axes[1, 0].set_ylabel('Success Rate (%)')
+        axes[1, 0].grid(True, alpha=0.3)
+        axes[1, 0].set_ylim(0, 105)
+        
+        # Error Analysis
+        error_counts = {}
+        for session in self.data['session_metrics']:
+            for error in session.get('errors', []):
+                error_type = error.split(':')[0]  # Get error type
+                error_counts[error_type] = error_counts.get(error_type, 0) + 1
+        
+        if error_counts:
+            axes[1, 1].bar(list(error_counts.keys()), list(error_counts.values()), 
+                         color='salmon', alpha=0.7)
+            axes[1, 1].set_title('Error Distribution', fontweight='bold')
+            axes[1, 1].set_xlabel('Error Type')
+            axes[1, 1].set_ylabel('Count')
+            axes[1, 1].tick_params(axis='x', rotation=45)
+            axes[1, 1].grid(True, alpha=0.3)
+        else:
+            axes[1, 1].text(0.5, 0.5, 'No Errors Recorded', 
+                          ha='center', va='center', transform=axes[1, 1].transAxes,
+                          fontsize=14, color='green', fontweight='bold')
+            axes[1, 1].set_title('Error Distribution', fontweight='bold')
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/performance_metrics.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_session_analysis(self, output_dir: str):
+        """Plot detailed session analysis"""
+        if not self.data['session_metrics']:
+            return
+            
+        sessions_df = pd.DataFrame(self.data['session_metrics'])
+        sessions_df['start_time'] = pd.to_datetime(sessions_df['start_time'])
+        sessions_df['end_time'] = pd.to_datetime(sessions_df['end_time'])
+        
+        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+        fig.suptitle('Session Analysis Deep Dive', fontsize=16, fontweight='bold')
+        
+        # Concurrent Sessions Over Time
+        time_range = pd.date_range(start=sessions_df['start_time'].min(), 
+                                 end=sessions_df['end_time'].max(), freq='10S')
+        concurrent_sessions = []
+        
+        for timestamp in time_range:
+            active = sessions_df[
+                (sessions_df['start_time'] <= timestamp) & 
+                (sessions_df['end_time'] >= timestamp)
+            ].shape[0]
+            concurrent_sessions.append(active)
+        
+        axes[0, 0].plot(time_range, concurrent_sessions, linewidth=2, color='purple')
+        axes[0, 0].fill_between(time_range, concurrent_sessions, alpha=0.3, color='purple')
+        axes[0, 0].set_title('Concurrent Sessions Over Time', fontweight='bold')
+        axes[0, 0].set_xlabel('Time')
+        axes[0, 0].set_ylabel('Concurrent Sessions')
+        axes[0, 0].grid(True, alpha=0.3)
+        axes[0, 0].tick_params(axis='x', rotation=45)
+        
+        # API Calls vs Response Time
+        valid_sessions = sessions_df[sessions_df['first_click_response_time'].notna()]
+        if not valid_sessions.empty:
+            scatter = axes[0, 1].scatter(valid_sessions['total_api_calls'], 
+                                       valid_sessions['first_click_response_time'],
+                                       c=valid_sessions['failed_api_calls'], 
+                                       cmap='Reds', alpha=0.6, s=50)
+            axes[0, 1].set_title('API Calls vs Response Time', fontweight='bold')
+            axes[0, 1].set_xlabel('Total API Calls')
+            axes[0, 1].set_ylabel('First Click Response Time (s)')
+            axes[0, 1].grid(True, alpha=0.3)
+            plt.colorbar(scatter, ax=axes[0, 1], label='Failed API Calls')
+        
+        # Session Start Rate
+        sessions_df['hour'] = sessions_df['start_time'].dt.floor('5min')
+        session_rate = sessions_df.groupby('hour').size()
+        
+        axes[1, 0].bar(range(len(session_rate)), session_rate.values, 
+                      color='teal', alpha=0.7)
+        axes[1, 0].set_title('Session Start Rate (5-min buckets)', fontweight='bold')
+        axes[1, 0].set_xlabel('Time Bucket')
+        axes[1, 0].set_ylabel('Sessions Started')
+        axes[1, 0].grid(True, alpha=0.3)
+        
+        # Performance Percentiles
+        if not valid_sessions.empty:
+            percentiles = [50, 75, 90, 95, 99]
+            response_time_percentiles = [valid_sessions['first_click_response_time'].quantile(p/100) 
+                                       for p in percentiles]
+            
+            axes[1, 1].bar([f'P{p}' for p in percentiles], response_time_percentiles, 
+                         color='gold', alpha=0.7)
+            axes[1, 1].set_title('Response Time Percentiles', fontweight='bold')
+            axes[1, 1].set_xlabel('Percentile')
+            axes[1, 1].set_ylabel('Response Time (s)')
+            axes[1, 1].grid(True, alpha=0.3)
+            
+            # Add values on bars
+            for i, v in enumerate(response_time_percentiles):
+                axes[1, 1].text(i, v + 0.01, f'{v:.2f}s', ha='center', va='bottom')
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/session_analysis.png', dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _create_interactive_dashboard(self, output_dir: str):
+        """Create interactive Plotly dashboard"""
+        fig = make_subplots(
+            rows=3, cols=2,
+            subplot_titles=('Node CPU Usage', 'Pod Scaling', 
+                          'HPA Replica Scaling', 'Response Time Distribution',
+                          'Concurrent Sessions', 'Success Rate'),
+            specs=[[{"secondary_y": False}, {"secondary_y": False}],
+                   [{"secondary_y": False}, {"secondary_y": False}],
+                   [{"secondary_y": False}, {"secondary_y": False}]]
+        )
+        
+        # Node CPU Usage
+        for node_name, metrics in self.data['node_metrics'].items():
+            fig.add_trace(
+                go.Scatter(x=self.timestamps, y=metrics['cpu_usage'],
+                          name=f'{node_name} CPU', mode='lines+markers'),
+                row=1, col=1
+            )
+        
+        # Pod Scaling
+        fig.add_trace(
+            go.Scatter(x=self.timestamps, y=self.data['pod_counts'],
+                      name='Browser Pods', mode='lines+markers',
+                      fill='tozeroy'),
+            row=1, col=2
+        )
+        
+        # HPA Metrics
+        if self.data['hpa_metrics']:
+            hpa_name = list(self.data['hpa_metrics'].keys())[0]
+            metrics = self.data['hpa_metrics'][hpa_name]
+            fig.add_trace(
+                go.Scatter(x=self.timestamps, y=metrics['current_replicas'],
+                          name='Current Replicas', mode='lines+markers'),
+                row=2, col=1
+            )
+            fig.add_trace(
+                go.Scatter(x=self.timestamps, y=metrics['desired_replicas'],
+                          name='Desired Replicas', mode='lines+markers'),
+                row=2, col=1
+            )
+        
+        # Response Time Distribution
+        if self.data['session_metrics']:
+            sessions_df = pd.DataFrame(self.data['session_metrics'])
+            valid_response_times = sessions_df[sessions_df['first_click_response_time'].notna()]
+            if not valid_response_times.empty:
+                fig.add_trace(
+                    go.Histogram(x=valid_response_times['first_click_response_time'],
+                               name='Response Time', nbinsx=30),
+                    row=2, col=2
+                )
+        
+        # Update layout
+        fig.update_layout(
+            height=1200,
+            title_text="KubeBrowse Interactive Benchmark Dashboard",
+            title_x=0.5,
+            showlegend=True
+        )
+        
+        fig.write_html(f'{output_dir}/interactive_dashboard.html')
+        logger.info(f"Interactive dashboard saved to {output_dir}/interactive_dashboard.html")
+    
+    def _generate_summary_report(self, output_dir: str):
+        """Generate summary report with key metrics"""
+        report = {
+            'benchmark_summary': {
+                'start_time': self.timestamps[0].isoformat() if self.timestamps else None,
+                'end_time': self.timestamps[-1].isoformat() if self.timestamps else None,
+                'duration_minutes': len(self.timestamps) * 10 / 60 if self.timestamps else 0,
+                'total_sessions': len(self.data['session_metrics']),
+            },
+            'infrastructure_metrics': {},
+            'performance_metrics': {},
+            'scaling_metrics': {}
+        }
+        
+        # Infrastructure metrics
+        if self.data['node_metrics']:
+            node_data = list(self.data['node_metrics'].values())[0]
+            report['infrastructure_metrics'] = {
+                'peak_cpu_usage_cores': max(node_data['cpu_usage']) if node_data['cpu_usage'] else 0,
+                'peak_memory_usage_gb': max(node_data['memory_usage']) if node_data['memory_usage'] else 0,
+                'avg_cpu_utilization_percent': np.mean(node_data['cpu_percent']) if node_data['cpu_percent'] else 0,
+                'avg_memory_utilization_percent': np.mean(node_data['memory_percent']) if node_data['memory_percent'] else 0,
+            }
+        
+        # Pod scaling metrics
+        if self.data['pod_counts']:
+            report['scaling_metrics'] = {
+                'max_pods': max(self.data['pod_counts']),
+                'min_pods': min(self.data['pod_counts']),
+                'avg_pods': np.mean(self.data['pod_counts']),
+                'pod_scaling_events': sum(1 for i in range(1, len(self.data['pod_counts'])) 
+                                        if self.data['pod_counts'][i] != self.data['pod_counts'][i-1])
+            }
+        
+        # Performance metrics
+        if self.data['session_metrics']:
+            sessions_df = pd.DataFrame(self.data['session_metrics'])
+            sessions_df['start_time'] = pd.to_datetime(sessions_df['start_time'])
+            sessions_df['end_time'] = pd.to_datetime(sessions_df['end_time'])
+            sessions_df['duration'] = (sessions_df['end_time'] - sessions_df['start_time']).dt.total_seconds()
+            
+            valid_response_times = sessions_df[sessions_df['first_click_response_time'].notna()]
+            total_api_calls = sessions_df['total_api_calls'].sum()
+            total_failed_calls = sessions_df['failed_api_calls'].sum()
+            
+            report['performance_metrics'] = {
+                'avg_response_time_seconds': valid_response_times['first_click_response_time'].mean() if not valid_response_times.empty else 0,
+                'p95_response_time_seconds': valid_response_times['first_click_response_time'].quantile(0.95) if not valid_response_times.empty else 0,
+                'p99_response_time_seconds': valid_response_times['first_click_response_time'].quantile(0.99) if not valid_response_times.empty else 0,
+                'success_rate_percent': ((total_api_calls - total_failed_calls) / total_api_calls * 100) if total_api_calls > 0 else 0,
+                'avg_session_duration_seconds': sessions_df['duration'].mean(),
+                'total_errors': sum(len(session.get('errors', [])) for session in self.data['session_metrics'])
+            }
+        
+        # Save report
+        with open(f'{output_dir}/benchmark_summary.json', 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        # Create readable report
+        with open(f'{output_dir}/benchmark_report.md', 'w') as f:
+            f.write("# KubeBrowse Benchmark Report\n\n")
+            f.write(f"## Test Summary\n")
+            f.write(f"- **Start Time:** {report['benchmark_summary']['start_time']}\n")
+            f.write(f"- **End Time:** {report['benchmark_summary']['end_time']}\n")
+            f.write(f"- **Duration:** {report['benchmark_summary']['duration_minutes']:.1f} minutes\n")
+            f.write(f"- **Total Sessions:** {report['benchmark_summary']['total_sessions']}\n\n")
+            
+            f.write("## Infrastructure Performance\n")
+            infra = report['infrastructure_metrics']
+            f.write(f"- **Peak CPU Usage:** {infra.get('peak_cpu_usage_cores', 0):.2f} cores\n")
+            f.write(f"- **Peak Memory Usage:** {infra.get('peak_memory_usage_gb', 0):.2f} GB\n")
+            f.write(f"- **Average CPU Utilization:** {infra.get('avg_cpu_utilization_percent', 0):.1f}%\n")
+            f.write(f"- **Average Memory Utilization:** {infra.get('avg_memory_utilization_percent', 0):.1f}%\n\n")
+            
+            f.write("## Scaling Performance\n")
+            scaling = report['scaling_metrics']
+            f.write(f"- **Maximum Pods:** {scaling.get('max_pods', 0)}\n")
+            f.write(f"- **Minimum Pods:** {scaling.get('min_pods', 0)}\n")
+            f.write(f"- **Average Pods:** {scaling.get('avg_pods', 0):.1f}\n")
+            f.write(f"- **Scaling Events:** {scaling.get('pod_scaling_events', 0)}\n\n")
+            
+            f.write("## Application Performance\n")
+            perf = report['performance_metrics']
+            f.write(f"- **Average Response Time:** {perf.get('avg_response_time_seconds', 0):.3f}s\n")
+            f.write(f"- **95th Percentile Response Time:** {perf.get('p95_response_time_seconds', 0):.3f}s\n")
+            f.write(f"- **99th Percentile Response Time:** {perf.get('p99_response_time_seconds', 0):.3f}s\n")
+            f.write(f"- **Success Rate:** {perf.get('success_rate_percent', 0):.1f}%\n")
+            f.write(f"- **Average Session Duration:** {perf.get('avg_session_duration_seconds', 0):.1f}s\n")
+            f.write(f"- **Total Errors:** {perf.get('total_errors', 0)}\n")
+        
+        logger.info(f"Summary report saved to {output_dir}/benchmark_report.md")
+
+def signal_handler(signum, frame):
+    """Handle interrupt signals gracefully"""
+    logger.info("Received interrupt signal, stopping benchmark...")
+    sys.exit(0)
+
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description='KubeBrowse Comprehensive Benchmarking Suite',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s --kubeconfig ~/.kube/config-prod --max-users 50
+  %(prog)s --namespace my-namespace --save-interval 30
+  %(prog)s --target-url http://example.com --test-duration 3600
+  %(prog)s --sessions-api-url https://172.18.120.152:30006/sessions/ --sessions-api-insecure
+  %(prog)s --browser-init-wait 5 --max-users 10 --session-start-interval 2
+        """
+    )
+    
+    # Kubernetes configuration
+    parser.add_argument(
+        '--kubeconfig', '--kubeconfig-path',
+        type=str,
+        help='Path to custom kubeconfig file (default: use kubectl default context or in-cluster config)'
+    )
+    parser.add_argument(
+        '--namespace', '-n',
+        type=str,
+        default='browser-sandbox',
+        help='Kubernetes namespace to monitor (default: browser-sandbox)'
+    )
+    
+    # Application configuration
+    parser.add_argument(
+        '--target-url', '--url',
+        type=str,
+        default='http://4.156.203.206/',
+        help='Target URL for load testing (default: http://4.156.203.206/)'
+    )
+    
+    # Browser configuration
+    parser.add_argument(
+        '--browser-init-wait',
+        type=int,
+        default=2,
+        help='Wait time in seconds after browser window initiation and page load (default: 2)'
+    )
+    parser.add_argument(
+        '--session-start-interval',
+        type=float,
+        default=1.0,
+        help='Time interval in seconds between starting new sessions (default: 1.0)'
+    )
+    
+    # Sessions API monitoring
+    parser.add_argument(
+        '--sessions-api-url',
+        type=str,
+        help='Sessions API endpoint URL for monitoring active sessions (e.g., https://172.18.120.152:30006/sessions/)'
+    )
+    parser.add_argument(
+        '--sessions-api-insecure',
+        action='store_true',
+        help='Allow insecure HTTPS connections for sessions API'
+    )
+    parser.add_argument(
+        '--enable-sessions-monitoring',
+        action='store_true',
+        help='Enable sessions API monitoring (automatically enabled if --sessions-api-url is provided)'
     )
 
-if __name__ == "__main__":
-    print("KubeBrowse Benchmarking System")
-    print("==============================")
-    print("This tool will monitor and visualize:")
-    print("- Kubernetes cluster CPU/Memory usage")
-    print("- Browser pod scaling")
-    print("- HPA replica counts")
-    print("- API response latency")
-    print("- WebSocket connection metrics")
-    print("- Active session counts")
-    print()
-    print("Make sure you have kubectl configured and the cluster is accessible.")
-    print("Starting benchmark...")
+    # Load test parameters
+    parser.add_argument(
+        '--max-users', '--max-concurrent-users',
+        type=int,
+        default=20,
+        help='Maximum number of concurrent users (default: 20)'
+    )
+    parser.add_argument(
+        '--ramp-up-duration',
+        type=int,
+        default=300,
+        help='Ramp-up duration in seconds (default: 300)'
+    )
+    parser.add_argument(
+        '--test-duration',
+        type=int,
+        default=1800,
+        help='Test duration in seconds (default: 1800)'
+    )
+    parser.add_argument(
+        '--ramp-down-duration',
+        type=int,
+        default=300,
+        help='Ramp-down duration in seconds (default: 300)'
+    )
+    
+    # Monitoring configuration
+    parser.add_argument(
+        '--polling-interval',
+        type=int,
+        default=10,
+        help='Metrics polling interval in seconds (default: 10)'
+    )
+    parser.add_argument(
+        '--api-timeout',
+        type=int,
+        default=10,
+        help='API request timeout in seconds (default: 10)'
+    )
+    parser.add_argument(
+        '--websocket-timeout',
+        type=int,
+        default=30,
+        help='WebSocket connection timeout in seconds (default: 30)'
+    )
+    
+    # Visualization configuration
+    parser.add_argument(
+        '--save-visualizations',
+        action='store_true',
+        default=True,
+        help='Enable periodic visualization saving (default: enabled)'
+    )
+    parser.add_argument(
+        '--no-save-visualizations',
+        action='store_false',
+        dest='save_visualizations',
+        help='Disable periodic visualization saving'
+    )
+    parser.add_argument(
+        '--save-interval',
+        type=int,
+        default=60,
+        help='Visualization save interval in seconds (default: 60)'
+    )
+    parser.add_argument(
+        '--output-dir',
+        type=str,
+        default='benchmark_snapshots',
+        help='Output directory for visualization snapshots (default: benchmark_snapshots)'
+    )
+    
+    # Logging configuration
+    parser.add_argument(
+        '--log-level',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        default='INFO',
+        help='Logging level (default: INFO)'
+    )
+    parser.add_argument(
+        '--log-file',
+        type=str,
+        default='kubebrowse_benchmark.log',
+        help='Log file path (default: kubebrowse_benchmark.log)'
+    )
+    
+    return parser.parse_args()
+
+def setup_logging(log_level: str, log_file: str):
+    """Setup logging configuration"""
+    # Clear existing handlers
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, log_level),
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+
+def validate_kubeconfig(kubeconfig_path: str) -> bool:
+    """Validate that the kubeconfig file exists and is readable"""
+    if not kubeconfig_path:
+        return True
+        
+    if not os.path.exists(kubeconfig_path):
+        logger.error(f"Kubeconfig file not found: {kubeconfig_path}")
+        return False
+        
+    if not os.access(kubeconfig_path, os.R_OK):
+        logger.error(f"Kubeconfig file is not readable: {kubeconfig_path}")
+        return False
+        
+    # Try to load and validate the kubeconfig
+    try:
+        from kubernetes import config as k8s_config
+        k8s_config.load_kube_config(config_file=kubeconfig_path, persist_config=False)
+        logger.info(f"Kubeconfig validation successful: {kubeconfig_path}")
+        return True
+    except Exception as e:
+        logger.error(f"Invalid kubeconfig file {kubeconfig_path}: {e}")
+        return False
+
+def create_config_from_args(args) -> BenchmarkConfig:
+    """Create BenchmarkConfig from parsed arguments"""
+    # Auto-enable sessions monitoring if API URL is provided
+    enable_sessions = args.enable_sessions_monitoring or bool(args.sessions_api_url)
+    
+    return BenchmarkConfig(
+        target_url=args.target_url,
+        namespace=args.namespace,
+        max_concurrent_users=args.max_users,
+        ramp_up_duration=args.ramp_up_duration,
+        test_duration=args.test_duration,
+        ramp_down_duration=args.ramp_down_duration,
+        polling_interval=args.polling_interval,
+        websocket_timeout=args.websocket_timeout,
+        api_timeout=args.api_timeout,
+        save_visualizations=args.save_visualizations,
+        save_interval=args.save_interval,
+        output_dir=args.output_dir,
+        kubeconfig_path=args.kubeconfig,
+        sessions_api_url=args.sessions_api_url,
+        sessions_api_insecure=args.sessions_api_insecure,
+        enable_sessions_monitoring=enable_sessions,
+        browser_init_wait=args.browser_init_wait,
+        session_start_interval=args.session_start_interval
+    )
+
+def main():
+    """Main function to run the benchmark"""
+    # Set matplotlib backend at the very beginning
+    matplotlib.use('Agg')
+    plt.ioff()
+    
+    # Parse command line arguments
+    args = parse_arguments()
+    
+    # Setup logging
+    setup_logging(args.log_level, args.log_file)
+    
+    # Validate kubeconfig if provided
+    if args.kubeconfig and not validate_kubeconfig(args.kubeconfig):
+        sys.exit(1)
+    
+    # Create configuration from arguments
+    config = create_config_from_args(args)
+    
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    logger.info("Starting KubeBrowse comprehensive benchmark suite...")
+    logger.info(f"Configuration: {config}")
+    
+    if config.kubeconfig_path:
+        logger.info(f"Using custom kubeconfig: {config.kubeconfig_path}")
+    else:
+        logger.info("Using default kubectl context or in-cluster configuration")
+    
+    if config.enable_sessions_monitoring and config.sessions_api_url:
+        logger.info(f"Sessions API monitoring enabled: {config.sessions_api_url}")
+        if config.sessions_api_insecure:
+            logger.info("Using insecure HTTPS connections for sessions API")
+    
+    logger.info(f"Browser initialization wait time: {config.browser_init_wait} seconds")
+    logger.info(f"Session start interval: {config.session_start_interval} seconds")
+    logger.info("Using non-interactive matplotlib backend for thread safety")
+    logger.info("Optimized for immediate click simulation with minimal delays")
+    
+    if config.save_visualizations:
+        logger.info(f"Enhanced visualizations will be saved every {config.save_interval} seconds to {config.output_dir}/")
     
     try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\nBenchmark stopped by user.")
+        # Run benchmark
+        controller = LoadTestController(config)
+        metrics_file = controller.run_benchmark()
+        
+        # Generate final visualizations
+        visualizer = BenchmarkVisualizer(metrics_file)
+        visualizer.create_comprehensive_dashboard()
+        
+        logger.info("Benchmark completed successfully!")
+        logger.info("Check the 'benchmark_results' directory for detailed reports and visualizations")
+        if config.save_visualizations:
+            logger.info(f"Check the '{config.output_dir}' directory for periodic visualization snapshots")
+        
     except Exception as e:
-        print(f"Benchmark failed: {e}")
-        logger.error(f"Benchmark failed: {e}", exc_info=True)
+        logger.error(f"Benchmark failed: {e}")
+        raise
+    finally:
+        # Clean up matplotlib state on exit
+        try:
+            plt.close('all')
+            plt.clf()
+        except:
+            pass
+
+if __name__ == "__main__":
+    main()

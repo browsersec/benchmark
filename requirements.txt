@@ -1,0 +1,36 @@
+# KubeBrowse Benchmark Suite Requirements
+# Core libraries
+pandas>=1.5.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+plotly>=5.10.0
+requests>=2.25.0
+
+# Kubernetes client
+kubernetes>=24.2.0
+
+# System monitoring
+psutil>=5.8.0
+
+# WebSocket testing
+websocket-client>=1.3.0
+
+# Selenium for browser automation
+selenium>=4.5.0
+webdriver-manager>=3.8.0
+
+# Data processing
+scipy>=1.7.0
+
+# Progress monitoring
+tqdm>=4.62.0
+
+# Configuration
+pyyaml>=6.0
+
+# Logging
+colorlog>=6.6.0
+
+# Prometheus metrics (optional)
+prometheus-client>=0.14.0
