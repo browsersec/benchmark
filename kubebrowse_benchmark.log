@@ -326,3 +326,75 @@
 2025-06-15 22:02:20,469 - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x757add91f910>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e2540c1e2dcdd879ba879366a786064c/elements
 2025-06-15 22:02:20,469 - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x757add91fac0>: Failed to establish a new connection: [Errno 111] Connection refused')': /session/e2540c1e2dcdd879ba879366a786064c/elements
 2025-06-15 22:02:20,470 - ERROR - Session user_3: Interaction error - HTTPConnectionPool(host='localhost', port=48799): Max retries exceeded with url: /session/e2540c1e2dcdd879ba879366a786064c/elements (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x757add91f760>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2025-06-15 22:35:58,144 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-06-15 22:35:58,144 - INFO - Configuration: BenchmarkConfig(target_url='http://4.156.203.206/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=300, test_duration=600, ramp_down_duration=300, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url=None, sessions_api_insecure=False, enable_sessions_monitoring=False, browser_init_wait=20, session_start_interval=5.0)
+2025-06-15 22:35:58,144 - INFO - Using default kubectl context or in-cluster configuration
+2025-06-15 22:35:58,144 - INFO - Browser initialization wait time: 20 seconds
+2025-06-15 22:35:58,144 - INFO - Session start interval: 5.0 seconds
+2025-06-15 22:35:58,144 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-06-15 22:35:58,144 - INFO - Optimized for immediate click simulation with minimal delays
+2025-06-15 22:35:58,144 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-06-15 22:35:58,157 - INFO - Using default kubeconfig from kubectl context
+2025-06-15 22:35:58,157 - INFO - Starting KubeBrowse benchmark...
+2025-06-15 22:35:58,158 - INFO - Started periodic visualization saving every 30 seconds
+2025-06-15 22:35:58,158 - INFO - Starting 5 new sessions with 5.0s interval
+2025-06-15 22:35:58,158 - INFO - Session user_1: Starting session
+2025-06-15 22:35:58,159 - INFO - Started session user_1 at 22:35:58
+2025-06-15 22:36:02,065 - INFO - Session user_1: Navigating to http://4.156.203.206/
+2025-06-15 22:36:03,184 - INFO - Session user_3: Starting session
+2025-06-15 22:36:03,184 - INFO - Started session user_3 at 22:36:03
+2025-06-15 22:36:04,369 - INFO - Session user_3: Navigating to http://4.156.203.206/
+2025-06-15 22:36:07,992 - INFO - Session user_1: Page loaded, starting interactions
+2025-06-15 22:36:08,209 - INFO - Session user_5: Starting session
+2025-06-15 22:36:08,209 - INFO - Started session user_5 at 22:36:08
+2025-06-15 22:36:08,494 - INFO - Session user_1: Attempting first click
+2025-06-15 22:36:08,561 - INFO - Session user_1: First click completed in 0.067s
+2025-06-15 22:36:09,063 - INFO - Session user_1: Looking for py-2 elements
+2025-06-15 22:36:09,084 - INFO - Session user_5: Navigating to http://4.156.203.206/
+2025-06-15 22:36:09,105 - INFO - Session user_1: Clicked first py-2 button
+2025-06-15 22:36:09,612 - INFO - Session user_1: Keeping browser window open...
+2025-06-15 22:36:09,612 - ERROR - Session user_1: Interaction error - timestamp too large to convert to C _PyTime_t
+2025-06-15 22:36:10,262 - INFO - Session user_3: Page loaded, starting interactions
+2025-06-15 22:36:10,764 - INFO - Session user_3: Attempting first click
+2025-06-15 22:36:10,879 - INFO - Session user_3: First click completed in 0.115s
+2025-06-15 22:36:11,381 - INFO - Session user_3: Looking for py-2 elements
+2025-06-15 22:36:11,478 - INFO - Session user_3: Clicked first py-2 button
+2025-06-15 22:36:11,990 - INFO - Session user_3: Keeping browser window open...
+2025-06-15 22:36:11,990 - ERROR - Session user_3: Interaction error - timestamp too large to convert to C _PyTime_t
+2025-06-15 22:36:13,234 - INFO - Started session user_7 at 22:36:13
+2025-06-15 22:36:13,234 - INFO - Session user_7: Starting session
+2025-06-15 22:36:14,451 - INFO - Session user_7: Navigating to http://4.156.203.206/
+2025-06-15 22:36:15,557 - INFO - Session user_5: Page loaded, starting interactions
+2025-06-15 22:36:16,059 - INFO - Session user_5: Attempting first click
+2025-06-15 22:36:16,119 - INFO - Session user_5: First click completed in 0.059s
+2025-06-15 22:36:16,621 - INFO - Session user_5: Looking for py-2 elements
+2025-06-15 22:36:16,769 - ERROR - Session user_5: Interaction error - ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2025-06-15 22:36:17,757 - ERROR - Session user_7: Error - Message: no such window: target window already closed
+from unknown error: web view not found
+  (Session info: chrome=137.0.7151.68)
+Stacktrace:
+#0 0x615d47341c9a <unknown>
+#1 0x615d46de76e0 <unknown>
+#2 0x615d46dbc0c0 <unknown>
+#3 0x615d46e676a8 <unknown>
+#4 0x615d46e84c6c <unknown>
+#5 0x615d46e5ec03 <unknown>
+#6 0x615d46e2b47b <unknown>
+#7 0x615d46e2c0e1 <unknown>
+#8 0x615d4730644b <unknown>
+#9 0x615d4730a37f <unknown>
+#10 0x615d472edf89 <unknown>
+#11 0x615d4730af18 <unknown>
+#12 0x615d472d26df <unknown>
+#13 0x615d4732f308 <unknown>
+#14 0x615d4732f4e6 <unknown>
+#15 0x615d47340b76 <unknown>
+#16 0x7ec0c0094ac3 <unknown>
+
+2025-06-15 22:36:18,258 - INFO - Started session user_9 at 22:36:18
+2025-06-15 22:36:18,259 - INFO - Active sessions: 1, Completed: 0
+2025-06-15 22:36:18,259 - INFO - Session user_9: Starting session
+2025-06-15 22:36:19,134 - INFO - Session user_9: Navigating to http://4.156.203.206/
+2025-06-15 22:36:20,533 - INFO - Received interrupt signal, stopping benchmark...
+2025-06-15 22:36:20,534 - ERROR - Session user_9: Error - ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2025-06-15 22:36:24,745 - INFO - Received interrupt signal, stopping benchmark...

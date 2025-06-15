@@ -418,9 +418,20 @@ class BrowserSimulator:
                         self.metrics.total_api_calls += 1
                         logger.info(f"Session {self.session_id}: Successfully clicked second py-2 button")
                 else:
-                    # Keep window open like in selenium test - long sleep to prevent auto-close
+                    # Keep window open like in selenium test - use proper wait mechanism
                     logger.info(f"Session {self.session_id}: Keeping browser window open...")
-                    time.sleep(9999999999999999999)  # Long sleep to keep window open
+                    # Use a proper wait mechanism instead of extremely large sleep
+                    try:
+                        # Wait for user to manually close or for a reasonable timeout
+                        # This prevents the timestamp overflow issue
+                        wait_time = 3600  # 1 hour maximum wait
+                        start_wait = time.time()
+                        while time.time() - start_wait < wait_time:
+                            if not self.driver or not self.driver.service.is_connectable():
+                                break
+                            time.sleep(30)  # Check every 30 seconds if browser is still open
+                    except Exception as e:
+                        logger.info(f"Session {self.session_id}: Wait interrupted: {e}")
             else:
                 logger.warning(f"Session {self.session_id}: No py-2 elements found or not clickable")
                     
@@ -429,7 +440,7 @@ class BrowserSimulator:
             self.metrics.failed_api_calls += 1
             logger.error(f"Session {self.session_id}: Timeout waiting for elements")
         except Exception as e:
-            self.metrics.errors.append(f"Interaction error: {e}")
+            self.metrics.errors.append(f"Interaction error - {e}")
             self.metrics.failed_api_calls += 1
             logger.error(f"Session {self.session_id}: Interaction error - {e}")
     
