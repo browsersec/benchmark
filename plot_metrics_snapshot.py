@@ -852,74 +852,223 @@ class SnapshotVisualizer:
         logger.info(f"Session analysis plot saved to {output_dir}/session_analysis_detailed.png")
     
     def create_interactive_dashboard(self, output_dir: str = None):
-        """Create interactive Plotly dashboard"""
+        """Create interactive Plotly dashboard with all metrics"""
         if output_dir is None:
             output_dir = os.path.dirname(self.json_file)
         
+        # Calculate number of subplots needed
+        total_timestamps = len(self.timestamps)
+        has_hpa = bool(self.data['hpa_metrics'])
+        has_sessions = bool(self.data['session_metrics'])
+        
+        # Create subplot layout - 4 rows x 2 columns
         fig = make_subplots(
-            rows=3, cols=2,
-            subplot_titles=('Node CPU Usage', 'Pod Scaling', 
-                          'HPA Replica Scaling', 'Response Time Distribution',
-                          'Concurrent Sessions', 'Success Rate'),
+            rows=4, cols=2,
+            subplot_titles=('Node CPU Usage (Cores)', 'Node Memory Usage (GB)', 
+                          'Pod Scaling', 'HPA Replica Scaling' if has_hpa else 'API Active Sessions',
+                          'Response Time Distribution' if has_sessions else 'Empty', 
+                          'Performance Percentiles' if has_sessions else 'Empty',
+                          'Concurrent Sessions' if has_sessions else 'Empty', 
+                          'Success Rate Over Time' if has_sessions else 'Empty'),
             specs=[[{"secondary_y": False}, {"secondary_y": False}],
+                   [{"secondary_y": False}, {"secondary_y": False}],
                    [{"secondary_y": False}, {"secondary_y": False}],
                    [{"secondary_y": False}, {"secondary_y": False}]]
         )
         
-        # Node CPU Usage
-        for node_name, metrics in self.data['node_metrics'].items():
-            fig.add_trace(
-                go.Scatter(x=self.timestamps, y=metrics['cpu_usage'],
-                          name=f'{node_name} CPU', mode='lines+markers'),
-                row=1, col=1
-            )
+        # Node CPU Usage (Cores)
+        if self.data['node_metrics']:
+            for node_name, metrics in self.data['node_metrics'].items():
+                cpu_usage_data = metrics['cpu_usage'][:total_timestamps]
+                data_length = min(len(cpu_usage_data), total_timestamps)
+                aligned_timestamps = self.timestamps[:data_length]
+                
+                fig.add_trace(
+                    go.Scatter(x=aligned_timestamps, y=cpu_usage_data[:data_length],
+                              name=f'{node_name} CPU', mode='lines+markers',
+                              hovertemplate='<b>%{fullData.name}</b><br>Time: %{x}<br>CPU: %{y:.2f} cores<extra></extra>'),
+                    row=1, col=1
+                )
+        
+        # Node Memory Usage (GB)
+        if self.data['node_metrics']:
+            for node_name, metrics in self.data['node_metrics'].items():
+                memory_usage_data = metrics['memory_usage'][:total_timestamps]
+                data_length = min(len(memory_usage_data), total_timestamps)
+                aligned_timestamps = self.timestamps[:data_length]
+                
+                fig.add_trace(
+                    go.Scatter(x=aligned_timestamps, y=memory_usage_data[:data_length],
+                              name=f'{node_name} Memory', mode='lines+markers',
+                              hovertemplate='<b>%{fullData.name}</b><br>Time: %{x}<br>Memory: %{y:.2f} GB<extra></extra>'),
+                    row=1, col=2
+                )
         
         # Pod Scaling
-        fig.add_trace(
-            go.Scatter(x=self.timestamps, y=self.data['pod_counts'],
-                      name='Browser Pods', mode='lines+markers',
-                      fill='tozeroy'),
-            row=1, col=2
-        )
-        
-        # HPA Metrics
-        if self.data['hpa_metrics']:
-            hpa_name = list(self.data['hpa_metrics'].keys())[0]
-            metrics = self.data['hpa_metrics'][hpa_name]
+        if self.data['pod_counts']:
+            pod_data = self.data['pod_counts']
+            data_length = min(len(pod_data), total_timestamps)
+            aligned_timestamps = self.timestamps[:data_length]
+            
             fig.add_trace(
-                go.Scatter(x=self.timestamps, y=metrics['current_replicas'],
-                          name='Current Replicas', mode='lines+markers'),
-                row=2, col=1
-            )
-            fig.add_trace(
-                go.Scatter(x=self.timestamps, y=metrics['desired_replicas'],
-                          name='Desired Replicas', mode='lines+markers'),
+                go.Scatter(x=aligned_timestamps, y=pod_data[:data_length],
+                          name='Browser Pods', mode='lines+markers',
+                          fill='tozeroy', fillcolor='rgba(46, 134, 171, 0.3)',
+                          hovertemplate='<b>Browser Pods</b><br>Time: %{x}<br>Pods: %{y}<extra></extra>'),
                 row=2, col=1
             )
         
-        # Response Time Distribution
-        if self.data['session_metrics']:
+        # HPA Replica Scaling or API Sessions
+        if has_hpa:
+            for hpa_name, metrics in self.data['hpa_metrics'].items():
+                current_replicas = metrics['current_replicas']
+                desired_replicas = metrics['desired_replicas']
+                data_length = min(len(current_replicas), len(desired_replicas), total_timestamps)
+                aligned_timestamps = self.timestamps[:data_length]
+                
+                fig.add_trace(
+                    go.Scatter(x=aligned_timestamps, y=current_replicas[:data_length],
+                              name=f'{hpa_name} Current', mode='lines+markers',
+                              hovertemplate='<b>%{fullData.name}</b><br>Time: %{x}<br>Replicas: %{y}<extra></extra>'),
+                    row=2, col=2
+                )
+                fig.add_trace(
+                    go.Scatter(x=aligned_timestamps, y=desired_replicas[:data_length],
+                              name=f'{hpa_name} Desired', mode='lines+markers',
+                              line=dict(dash='dash'),
+                              hovertemplate='<b>%{fullData.name}</b><br>Time: %{x}<br>Replicas: %{y}<extra></extra>'),
+                    row=2, col=2
+                )
+                break  # Only show first HPA for clarity
+        elif self.data['api_sessions']:
+            api_data = self.data['api_sessions']
+            data_length = min(len(api_data), total_timestamps)
+            aligned_timestamps = self.timestamps[:data_length]
+            
+            active_sessions = [api_data[i].get('active_sessions', 0) for i in range(data_length)]
+            total_connections = [api_data[i].get('total_connections', 0) for i in range(data_length)]
+            
+            fig.add_trace(
+                go.Scatter(x=aligned_timestamps, y=active_sessions,
+                          name='Active Sessions', mode='lines+markers',
+                          hovertemplate='<b>Active Sessions</b><br>Time: %{x}<br>Sessions: %{y}<extra></extra>'),
+                row=2, col=2
+            )
+            fig.add_trace(
+                go.Scatter(x=aligned_timestamps, y=total_connections,
+                          name='Total Connections', mode='lines+markers',
+                          hovertemplate='<b>Total Connections</b><br>Time: %{x}<br>Connections: %{y}<extra></extra>'),
+                row=2, col=2
+            )
+        
+        # Response Time Distribution and Performance Analysis
+        if has_sessions:
             sessions_df = pd.DataFrame(self.data['session_metrics'])
+            sessions_df['start_time'] = pd.to_datetime(sessions_df['start_time'])
+            sessions_df['end_time'] = pd.to_datetime(sessions_df['end_time'])
+            
+            # Response Time Distribution
             valid_response_times = sessions_df[sessions_df['first_click_response_time'].notna()]
             if not valid_response_times.empty:
                 fig.add_trace(
                     go.Histogram(x=valid_response_times['first_click_response_time'],
-                               name='Response Time', nbinsx=30),
-                    row=2, col=2
+                               name='Response Time', nbinsx=30,
+                               hovertemplate='<b>Response Time Distribution</b><br>Time Range: %{x}<br>Count: %{y}<extra></extra>'),
+                    row=3, col=1
                 )
+                
+                # Performance Percentiles
+                percentiles = [50, 75, 90, 95, 99]
+                response_time_percentiles = [valid_response_times['first_click_response_time'].quantile(p/100) 
+                                           for p in percentiles]
+                
+                fig.add_trace(
+                    go.Bar(x=[f'P{p}' for p in percentiles], y=response_time_percentiles,
+                           name='Response Time Percentiles',
+                           hovertemplate='<b>%{x}</b><br>Response Time: %{y:.3f}s<extra></extra>'),
+                    row=3, col=2
+                )
+            
+            # Concurrent Sessions Over Time
+            time_range = pd.date_range(start=sessions_df['start_time'].min(), 
+                                     end=sessions_df['end_time'].max(), freq='10S')
+            concurrent_sessions = []
+            
+            for timestamp in time_range:
+                active = sessions_df[
+                    (sessions_df['start_time'] <= timestamp) & 
+                    (sessions_df['end_time'] >= timestamp)
+                ].shape[0]
+                concurrent_sessions.append(active)
+            
+            fig.add_trace(
+                go.Scatter(x=time_range, y=concurrent_sessions,
+                          name='Concurrent Sessions', mode='lines+markers',
+                          fill='tozeroy', fillcolor='rgba(128, 0, 128, 0.3)',
+                          hovertemplate='<b>Concurrent Sessions</b><br>Time: %{x}<br>Sessions: %{y}<extra></extra>'),
+                row=4, col=1
+            )
+            
+            # Success Rate Over Time
+            if len(sessions_df) > 5:
+                bucket_size = max(1, len(sessions_df) // 10)
+                success_rates = []
+                time_buckets = []
+                
+                for i in range(0, len(sessions_df), bucket_size):
+                    bucket = sessions_df.iloc[i:i+bucket_size]
+                    total_calls = bucket['total_api_calls'].sum()
+                    failed_calls = bucket['failed_api_calls'].sum()
+                    
+                    if total_calls > 0:
+                        success_rate = ((total_calls - failed_calls) / total_calls) * 100
+                        success_rates.append(success_rate)
+                        time_buckets.append(bucket['start_time'].mean())
+                
+                if success_rates:
+                    fig.add_trace(
+                        go.Scatter(x=time_buckets, y=success_rates,
+                                  name='Success Rate', mode='lines+markers',
+                                  hovertemplate='<b>Success Rate</b><br>Time: %{x}<br>Rate: %{y:.1f}%<extra></extra>'),
+                        row=4, col=2
+                    )
         
         # Update layout
         fig.update_layout(
-            height=1200,
+            height=1600,
             title_text="KubeBrowse Interactive Benchmark Dashboard",
             title_x=0.5,
-            showlegend=True
+            showlegend=True,
+            hovermode='closest'
         )
         
-        interactive_file = f'{output_dir}/interactive_dashboard.html'
+        # Update axes labels
+        fig.update_xaxes(title_text="Time", row=1, col=1)
+        fig.update_yaxes(title_text="CPU Cores", row=1, col=1)
+        fig.update_xaxes(title_text="Time", row=1, col=2)
+        fig.update_yaxes(title_text="Memory (GB)", row=1, col=2)
+        
+        fig.update_xaxes(title_text="Time", row=2, col=1)
+        fig.update_yaxes(title_text="Pod Count", row=2, col=1)
+        fig.update_xaxes(title_text="Time", row=2, col=2)
+        fig.update_yaxes(title_text="Replicas/Sessions", row=2, col=2)
+        
+        if has_sessions:
+            fig.update_xaxes(title_text="Response Time (s)", row=3, col=1)
+            fig.update_yaxes(title_text="Frequency", row=3, col=1)
+            fig.update_xaxes(title_text="Percentile", row=3, col=2)
+            fig.update_yaxes(title_text="Response Time (s)", row=3, col=2)
+            
+            fig.update_xaxes(title_text="Time", row=4, col=1)
+            fig.update_yaxes(title_text="Concurrent Sessions", row=4, col=1)
+            fig.update_xaxes(title_text="Time", row=4, col=2)
+            fig.update_yaxes(title_text="Success Rate (%)", row=4, col=2)
+        
+        # Save interactive dashboard
+        interactive_file = f'./index.html'
         fig.write_html(interactive_file)
         logger.info(f"Interactive dashboard saved to {interactive_file}")
-    
+
     def generate_summary_report(self, output_dir: str = None):
         """Generate summary report with key metrics"""
         if output_dir is None:
