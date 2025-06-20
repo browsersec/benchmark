@@ -14,7 +14,7 @@ python kubebrowse_benchmark.py \
     --max-users 50 \
     --test-duration 3600 \
     --save-interval 30 \
-    --target-url http://4.156.203.206/ \
+    --target-url http://4.4.4.4/ \
     --browser-init-wait 20 \
     --sessions-api-url "https://172.18.120.152:30006/sessions/" \
     --sessions-api-insecure
