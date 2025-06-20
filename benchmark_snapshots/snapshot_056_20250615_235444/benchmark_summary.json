@@ -1,0 +1,21 @@
+{
+  "benchmark_summary": {
+    "start_time": "2025-06-15T23:12:33.231498",
+    "end_time": "2025-06-15T23:54:38.589897",
+    "duration_minutes": 39.333333333333336,
+    "total_sessions": 0
+  },
+  "infrastructure_metrics": {
+    "peak_cpu_usage_cores": 2.39726296,
+    "peak_memory_usage_gb": 6.709117889404297,
+    "avg_cpu_utilization_percent": 11.142131266611843,
+    "avg_memory_utilization_percent": 70.33742620750196
+  },
+  "performance_metrics": {},
+  "scaling_metrics": {
+    "max_pods": 29,
+    "min_pods": 0,
+    "avg_pods": 18.79237288135593,
+    "pod_scaling_events": 46
+  }
+}

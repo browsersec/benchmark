@@ -36,3 +36,29 @@ python kubebrowse_benchmark.py \
     --session-start-interval 10 \
     --test-duration 600
 ```
+
+
+
+
+Visualization Instructions:
+==========================
+
+To generate plots from this snapshot, use the standalone plotting script:
+
+1. Basic dashboard:
+   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json
+
+2. All visualizations:
+   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json --all
+
+3. Individual detailed plots:
+   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json --individual-plots
+
+4. Interactive dashboard:
+   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json --interactive
+
+5. Summary report:
+   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json --summary-report
+
+6. Custom output directory:
+   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json --output-dir /path/to/output --all
