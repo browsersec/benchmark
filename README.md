@@ -52,8 +52,8 @@ uv run kubebrowse_benchmark.py \
     --browser-init-wait 40 \
     --sessions-api-url "https://192.168.122.203/sessions/" \
     --session-start-interval 10 \
-    --test-duration 600
-    --headless
+    --test-duration 600 \
+    --headless   2>&1 | tee -a output.log 
 ```
 
 
