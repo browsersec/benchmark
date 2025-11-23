@@ -14,6 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from kubernetes import client, config, watch
+from tqdm import tqdm
 
 # Configure logging
 import logging
@@ -224,6 +225,11 @@ class BenchmarkRunner:
             # Run Selenium tests in parallel
             with ThreadPoolExecutor(max_workers=min(user_count, 10)) as executor: 
                 futures = [executor.submit(run_single_test, self.url, self.duration, self.headless) for _ in range(user_count)]
+                
+                # Show progress bar for duration
+                if self.duration > 0:
+                    for _ in tqdm(range(self.duration), desc=f"Benchmarking {user_count} users"):
+                        time.sleep(1)
                 
                 batch_results = []
                 for f in futures:
