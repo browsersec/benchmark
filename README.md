@@ -26,7 +26,7 @@ TEST 2
 python kubebrowse_benchmark.py \
     --kubeconfig ~/benchmark/proxmox.yml \
     --namespace browser-sandbox \
-    --max-users 50 \
+    --max-users 500 \
     --test-duration 3600 \
     --save-interval 30 \
     --target-url http://192.168.122.202/ \
@@ -35,6 +35,7 @@ python kubebrowse_benchmark.py \
     --sessions-api-insecure \
     --session-start-interval 10 \
     --test-duration 600
+    --headless
 ```
 
 
