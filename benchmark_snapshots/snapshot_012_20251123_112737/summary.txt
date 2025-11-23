@@ -1,0 +1,9 @@
+Benchmark Snapshot - 20251123_112737
+========================================
+
+Timestamp: 20251123_112737
+Data points collected: 38
+Total sessions: 0
+Running pods: 77
+API Active Sessions: 1
+API Total Connections: 1

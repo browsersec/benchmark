@@ -1,0 +1,229 @@
+{
+  "timestamps": [
+    "2025-11-23T11:07:36.117128",
+    "2025-11-23T11:07:46.195935",
+    "2025-11-23T11:07:56.255532",
+    "2025-11-23T11:08:06.321018"
+  ],
+  "node_metrics": {
+    "debian-1": {
+      "cpu_usage": [
+        0.028724615,
+        0.048636399,
+        0.052697282,
+        0.052697282
+      ],
+      "memory_usage": [
+        2.8140907287597656,
+        2.8132896423339844,
+        2.8162078857421875,
+        2.8162078857421875
+      ],
+      "cpu_percent": [
+        0.3590576875,
+        0.6079549875,
+        0.6587160249999999,
+        0.6587160249999999
+      ],
+      "memory_percent": [
+        18.012177130961295,
+        18.007049609502616,
+        18.02572843767351,
+        18.02572843767351
+      ]
+    },
+    "debian-2": {
+      "cpu_usage": [
+        0.042290039,
+        0.035895104,
+        0.058850758,
+        0.058850758
+      ],
+      "memory_usage": [
+        0.9793968200683594,
+        0.9800071716308594,
+        0.9798812866210938,
+        0.9798812866210938
+      ],
+      "cpu_percent": [
+        0.5286254875,
+        0.44868879999999994,
+        0.735634475,
+        0.735634475
+      ],
+      "memory_percent": [
+        6.268834485072321,
+        6.272741168088455,
+        6.271935414716377,
+        6.271935414716377
+      ]
+    },
+    "debian-3": {
+      "cpu_usage": [
+        0.048984665,
+        0.036525667,
+        0.643566503,
+        0.643566503
+      ],
+      "memory_usage": [
+        1.2483062744140625,
+        1.2493171691894531,
+        1.2522468566894531,
+        1.2522468566894531
+      ],
+      "cpu_percent": [
+        0.6123083125,
+        0.4565708375,
+        8.0445812875,
+        8.0445812875
+      ],
+      "memory_percent": [
+        7.990045771674888,
+        7.996516215420361,
+        8.01526829389781,
+        8.01526829389781
+      ]
+    },
+    "debian-4": {
+      "cpu_usage": [
+        0.075688501,
+        0.073066679,
+        0.107069545,
+        0.107069545
+      ],
+      "memory_usage": [
+        1.2959785461425781,
+        1.2959213256835938,
+        1.2966880798339844,
+        1.2966880798339844
+      ],
+      "cpu_percent": [
+        1.8922125250000001,
+        1.826666975,
+        2.676738625,
+        2.676738625
+      ],
+      "memory_percent": [
+        16.698549918260255,
+        16.697812638547145,
+        16.707692186702815,
+        16.707692186702815
+      ]
+    }
+  },
+  "pod_counts": [
+    0,
+    1,
+    0,
+    0
+  ],
+  "hpa_metrics": {
+    "browser-sandbox-api-hpa": {
+      "current_replicas": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "desired_replicas": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "cpu_utilization": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    "browser-sandbox-fronted-hpa": {
+      "current_replicas": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "desired_replicas": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cpu_utilization": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    "guacd-hpa": {
+      "current_replicas": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "desired_replicas": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "cpu_utilization": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  },
+  "session_metrics": [],
+  "websocket_metrics": [],
+  "api_latency": [],
+  "api_sessions": [
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T11:07:36.172486"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T11:07:46.239578"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T11:07:56.291187"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T11:08:06.398738"
+    }
+  ]
+}

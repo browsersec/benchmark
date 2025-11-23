@@ -1,0 +1,193 @@
+{
+  "timestamps": [
+    "2025-11-23T10:07:50.137405",
+    "2025-11-23T10:08:10.167927",
+    "2025-11-23T10:08:23.234012",
+    "2025-11-23T10:08:36.322374",
+    "2025-11-23T10:08:56.349587",
+    "2025-11-23T10:09:09.442146",
+    "2025-11-23T10:09:29.461594",
+    "2025-11-23T10:09:42.527933",
+    "2025-11-23T10:10:02.607986",
+    "2025-11-23T10:10:15.683448",
+    "2025-11-23T10:10:35.702739",
+    "2025-11-23T10:10:48.764951",
+    "2025-11-23T10:11:08.791695",
+    "2025-11-23T10:11:21.853370",
+    "2025-11-23T10:11:41.868012",
+    "2025-11-23T10:11:54.943976",
+    "2025-11-23T10:12:14.962762",
+    "2025-11-23T10:12:28.024824",
+    "2025-11-23T10:12:48.104925",
+    "2025-11-23T10:13:01.183939"
+  ],
+  "node_metrics": {},
+  "pod_counts": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "hpa_metrics": {},
+  "session_metrics": [],
+  "websocket_metrics": [],
+  "api_latency": [],
+  "api_sessions": [
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:08:00.156076",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05d9afd9f0>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:08:13.221930",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05d9164a60>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:08:26.309994",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05c2a57340>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:08:46.337438",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05c2a571c0>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:08:59.429739",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05d9235f00>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:09:19.456419",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05d9235d80>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:09:32.517484",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05cba97520>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:09:52.540402",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05cbab47c0>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:10:05.673316",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05cb650d00>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:10:25.690546",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05cb6520b0>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:10:38.757097",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05cbb8abf0>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:10:58.779606",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05cbb8bd30>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:11:11.844860",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05cbb36b00>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:11:31.864399",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05cbb37e50>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:11:44.932865",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05cbd4cb80>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:12:04.950275",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05cbd4c370>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:12:18.020519",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05cb73d3c0>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:12:38.033491",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05cb73e590>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:12:51.172598",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f05cbdfc340>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:13:11.197067",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f05cb95ee30>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    }
+  ]
+}

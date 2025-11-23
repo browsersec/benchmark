@@ -1,0 +1,49 @@
+{
+  "timestamps": [
+    "2025-11-23T10:31:57.382027",
+    "2025-11-23T10:32:07.405112",
+    "2025-11-23T10:32:17.423935",
+    "2025-11-23T10:32:27.441750"
+  ],
+  "node_metrics": {},
+  "pod_counts": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "hpa_metrics": {},
+  "session_metrics": [],
+  "websocket_metrics": [],
+  "api_latency": [],
+  "api_sessions": [
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:31:57.392933",
+      "error": "400 Client Error: Bad Request for url: http://192.168.122.203/sessions/"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:32:07.411730",
+      "error": "400 Client Error: Bad Request for url: http://192.168.122.203/sessions/"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:32:17.430507",
+      "error": "400 Client Error: Bad Request for url: http://192.168.122.203/sessions/"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:32:27.449868",
+      "error": "400 Client Error: Bad Request for url: http://192.168.122.203/sessions/"
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "timestamps": [
+    "2025-11-23T10:44:04.469161",
+    "2025-11-23T10:44:24.726723"
+  ],
+  "node_metrics": {
+    "debian-1": {
+      "cpu_usage": [
+        0.187927533,
+        1.175864695
+      ],
+      "memory_usage": [
+        5.846858978271484,
+        6.237327575683594
+      ],
+      "cpu_percent": [
+        2.3490941625,
+        14.6983086875
+      ],
+      "memory_percent": [
+        37.424045536297236,
+        39.92332157910081
+      ]
+    },
+    "debian-2": {
+      "cpu_usage": [
+        0.281491636,
+        0.264133977
+      ],
+      "memory_usage": [
+        3.7543563842773438,
+        3.7592735290527344
+      ],
+      "cpu_percent": [
+        3.5186454499999997,
+        3.3016747125
+      ],
+      "memory_percent": [
+        24.030544401161652,
+        24.06201761621039
+      ]
+    },
+    "debian-3": {
+      "cpu_usage": [
+        0.238152494,
+        0.482170027
+      ],
+      "memory_usage": [
+        4.201744079589844,
+        4.3337554931640625
+      ],
+      "cpu_percent": [
+        2.976906175,
+        6.0271253375
+      ],
+      "memory_percent": [
+        26.89414305198867,
+        27.73910975484099
+      ]
+    },
+    "debian-4": {
+      "cpu_usage": [
+        0.203970758,
+        0.142459788
+      ],
+      "memory_usage": [
+        1.33660888671875,
+        1.3367805480957031
+      ],
+      "cpu_percent": [
+        5.09926895,
+        3.5614947
+      ],
+      "memory_percent": [
+        17.22206766654903,
+        17.224279505688358
+      ]
+    }
+  },
+  "pod_counts": [
+    26,
+    28
+  ],
+  "hpa_metrics": {
+    "browser-sandbox-api-hpa": {
+      "current_replicas": [
+        1,
+        1
+      ],
+      "desired_replicas": [
+        1,
+        1
+      ],
+      "cpu_utilization": [
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null
+      ]
+    },
+    "browser-sandbox-fronted-hpa": {
+      "current_replicas": [
+        2,
+        2
+      ],
+      "desired_replicas": [
+        0,
+        0
+      ],
+      "cpu_utilization": [
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null
+      ]
+    },
+    "guacd-hpa": {
+      "current_replicas": [
+        3,
+        3
+      ],
+      "desired_replicas": [
+        3,
+        3
+      ],
+      "cpu_utilization": [
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null
+      ]
+    }
+  },
+  "session_metrics": [],
+  "websocket_metrics": [],
+  "api_latency": [],
+  "api_sessions": [
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:44:14.700673",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f3fed90c0a0>, 'Connection to 192.168.122.203 timed out. (connect timeout=10)'))"
+    },
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:44:28.043707",
+      "error": "HTTPSConnectionPool(host='192.168.122.203', port=443): Max retries exceeded with url: /sessions/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f3fed928e50>: Failed to establish a new connection: [Errno 113] No route to host'))"
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "timestamps": [
+    "2025-11-23T10:47:36.347938",
+    "2025-11-23T10:47:46.436255",
+    "2025-11-23T10:47:56.505519"
+  ],
+  "node_metrics": {
+    "debian-1": {
+      "cpu_usage": [
+        0.025932575,
+        0.031114945,
+        0.802153984
+      ],
+      "memory_usage": [
+        2.7678756713867188,
+        2.776935577392578,
+        3.112224578857422
+      ],
+      "cpu_percent": [
+        0.3241571875,
+        0.3889368125,
+        10.0269248
+      ],
+      "memory_percent": [
+        17.716367976333313,
+        17.774357802354068,
+        19.920445283730178
+      ]
+    },
+    "debian-2": {
+      "cpu_usage": [
+        0.035914297,
+        0.027776868,
+        0.103780838
+      ],
+      "memory_usage": [
+        0.8881912231445312,
+        0.8884658813476562,
+        0.9250335693359375
+      ],
+      "cpu_percent": [
+        0.4489287125,
+        0.34721085,
+        1.297260475
+      ],
+      "memory_percent": [
+        5.685053958617484,
+        5.686811965974744,
+        5.920871112178938
+      ]
+    },
+    "debian-3": {
+      "cpu_usage": [
+        0.045071499,
+        0.075197655,
+        0.07031834
+      ],
+      "memory_usage": [
+        1.3080520629882812,
+        1.3035011291503906,
+        1.3121414184570312
+      ],
+      "cpu_percent": [
+        0.5633937375,
+        0.9399706875,
+        0.8789792499999999
+      ],
+      "memory_percent": [
+        8.372461205416812,
+        8.343332000177755,
+        8.398635981624917
+      ]
+    },
+    "debian-4": {
+      "cpu_usage": [
+        0.086988228,
+        0.08753916,
+        0.122543367
+      ],
+      "memory_usage": [
+        1.3407020568847656,
+        1.3417472839355469,
+        1.3399925231933594
+      ],
+      "cpu_percent": [
+        2.1747057,
+        2.188479,
+        3.063584175
+      ],
+      "memory_percent": [
+        17.274807742026812,
+        17.288275384786285,
+        17.265665473584253
+      ]
+    }
+  },
+  "pod_counts": [
+    1,
+    2,
+    2
+  ],
+  "hpa_metrics": {
+    "browser-sandbox-api-hpa": {
+      "current_replicas": [
+        1,
+        1,
+        1
+      ],
+      "desired_replicas": [
+        1,
+        1,
+        1
+      ],
+      "cpu_utilization": [
+        null,
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null,
+        null
+      ]
+    },
+    "browser-sandbox-fronted-hpa": {
+      "current_replicas": [
+        2,
+        2,
+        2
+      ],
+      "desired_replicas": [
+        0,
+        0,
+        0
+      ],
+      "cpu_utilization": [
+        null,
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null,
+        null
+      ]
+    },
+    "guacd-hpa": {
+      "current_replicas": [
+        2,
+        2,
+        2
+      ],
+      "desired_replicas": [
+        3,
+        3,
+        3
+      ],
+      "cpu_utilization": [
+        null,
+        null,
+        null
+      ],
+      "memory_utilization": [
+        null,
+        null,
+        null
+      ]
+    }
+  },
+  "session_metrics": [],
+  "websocket_metrics": [],
+  "api_latency": [],
+  "api_sessions": [
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-11-23T10:47:36.411784"
+    },
+    {
+      "active_sessions": 1,
+      "connection_ids": [
+        {
+          "uuid": "$f1d10056-1377-4462-b5e2-7a9f0317892f"
+        }
+      ],
+      "total_connections": 1,
+      "timestamp": "2025-11-23T10:47:46.485421"
+    },
+    {
+      "active_sessions": 1,
+      "connection_ids": [
+        {
+          "uuid": "$f1d10056-1377-4462-b5e2-7a9f0317892f"
+        }
+      ],
+      "total_connections": 1,
+      "timestamp": "2025-11-23T10:47:56.549592"
+    }
+  ]
+}
