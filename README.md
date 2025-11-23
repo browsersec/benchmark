@@ -24,7 +24,7 @@ TEST 2
 
 ```
 python kubebrowse_benchmark.py \
-    --kubeconfig ~/benchmark/proxmox.yml \
+    --kubeconfig ./config \
     --namespace browser-sandbox \
     --max-users 500 \
     --test-duration 3600 \
