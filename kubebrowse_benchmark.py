@@ -81,6 +81,7 @@ class BenchmarkConfig:
     enable_sessions_monitoring: bool = False  # Enable sessions API monitoring
     browser_init_wait: int = 2  # Wait time after browser window initiation in seconds
     session_start_interval: float = 1.0  # Time interval between starting new sessions in seconds
+    headless: bool = False  # Run browser in headless mode
 
 @dataclass
 class MetricPoint:
@@ -322,10 +323,13 @@ class BrowserSimulator:
     def setup_driver(self):
         """Setup Chrome driver with options"""
         chrome_options = Options()
-        # chrome_options.add_argument('--headless')  # Commented out to show browser window
+        if self.config.headless:
+            chrome_options.add_argument('--headless=new')
+            chrome_options.add_argument('--disable-gpu')
+        
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-gpu')
+        # chrome_options.add_argument('--disable-gpu') # Added above if headless
         chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument('--start-maximized')  # Start with maximized window
         chrome_options.add_argument('--disable-extensions')  # Disable extensions for faster startup
@@ -1706,6 +1710,11 @@ Examples:
         default=1.0,
         help='Time interval in seconds between starting new sessions (default: 1.0)'
     )
+    parser.add_argument(
+        '--headless',
+        action='store_true',
+        help='Run browser in headless mode'
+    )
     
     # Sessions API monitoring
     parser.add_argument(
@@ -1874,7 +1883,8 @@ def create_config_from_args(args) -> BenchmarkConfig:
         sessions_api_insecure=args.sessions_api_insecure,
         enable_sessions_monitoring=enable_sessions,
         browser_init_wait=args.browser_init_wait,
-        session_start_interval=args.session_start_interval
+        session_start_interval=args.session_start_interval,
+        headless=args.headless
     )
 
 def main():
