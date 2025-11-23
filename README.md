@@ -39,6 +39,24 @@ python kubebrowse_benchmark.py \
 ```
 
 
+TEST 2
+
+```
+uv run kubebrowse_benchmark.py \
+    --kubeconfig ./config \
+    --namespace browser-sandbox \
+    --max-users 500 \
+    --test-duration 3600 \
+    --save-interval 30 \
+    --target-url http://192.168.122.202/ \
+    --browser-init-wait 40 \
+    --sessions-api-url "http://192.168.122.203/sessions/" \
+    --session-start-interval 10 \
+    --test-duration 600
+    --headless
+```
+
+
 
 
 Visualization Instructions:
