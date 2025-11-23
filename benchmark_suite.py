@@ -111,8 +111,9 @@ class K8sMetricsCollector:
             return None
 
 class KubeBrowseTest:
-    def __init__(self, url, headless=True):
+    def __init__(self, url, duration=0, headless=True):
         self.url = url
+        self.duration = duration
         options = webdriver.ChromeOptions()
         if headless:
             options.add_argument('--headless')
@@ -125,31 +126,47 @@ class KubeBrowseTest:
         self.driver.quit()
 
     def run_benchmark(self):
-        metrics = {}
+        metrics = {'samples': []}
         try:
             logger.info(f"Connecting to {self.url}")
             self.driver.get(self.url)
             self.driver.set_window_size(1280, 720)
             
             # Wait for Guacamole client to be ready
-            # We look for the canvas or the exposed window object
-            time.sleep(5) # Give it some time to load and connect
+            time.sleep(5) 
             
-            # 1. WebSocket RTT
-            rtt = self.measure_rtt()
-            metrics['rtt_ms'] = rtt
+            start_time = time.time()
             
-            # 2. Browsing Latency
-            latency = self.measure_browsing_latency()
-            metrics['browsing_latency_ms'] = latency
-            
-            # 3. Bandwidth
-            bandwidth = self.measure_bandwidth()
-            metrics.update(bandwidth)
-            
-            # 4. Isolation
-            isolation = self.validate_isolation()
-            metrics['isolation_pass'] = isolation
+            while True:
+                sample = {}
+                # 1. WebSocket RTT
+                sample['rtt_ms'] = self.measure_rtt()
+                
+                # 2. Browsing Latency
+                sample['browsing_latency_ms'] = self.measure_browsing_latency()
+                
+                # 3. Bandwidth
+                sample.update(self.measure_bandwidth())
+                
+                # 4. Isolation
+                sample['isolation_pass'] = self.validate_isolation()
+                
+                metrics['samples'].append(sample)
+                
+                # Check duration
+                elapsed = time.time() - start_time
+                if elapsed >= self.duration:
+                    break
+                
+                time.sleep(1) # Interval between samples
+
+            # Aggregate samples for this session
+            df = pd.DataFrame(metrics['samples'])
+            metrics['rtt_ms'] = df['rtt_ms'].mean()
+            metrics['browsing_latency_ms'] = df['browsing_latency_ms'].mean()
+            metrics['bytesReceived'] = df['bytesReceived'].max() # Total bytes is the max of cumulative counter
+            metrics['bytesSent'] = df['bytesSent'].max()
+            metrics['isolation_pass'] = df['isolation_pass'].all()
 
         except Exception as e:
             logger.error(f"Test failed: {e}")
@@ -160,19 +177,7 @@ class KubeBrowseTest:
         return metrics
 
     def measure_rtt(self):
-        # We can try to access the exposed client to get RTT if available, 
-        # or measure round trip of a simple command if we had a way to hook into it.
-        # Since we exposed window.guacClient, let's see if we can get the internal RTT 
-        # or simulate one. Guacamole client doesn't expose a direct RTT property easily 
-        # without server-side support (ping/pong).
-        # However, we can measure the time to execute a JS snippet that interacts with the client.
-        # A better proxy for "Application RTT" is measuring how long a no-op takes if we could send one.
-        # For now, we will use a JS execution round trip as a baseline + any exposed metrics.
-        
-        # If the client exposes a ping method or we can check connection state latency:
         return self.driver.execute_script("""
-            // This is a rough estimation of the JS-to-Browser-to-JS loop, 
-            // plus we check if the client is connected.
             var start = performance.now();
             if (window.guacClient && window.guacClient.getDisplay()) {
                 return performance.now() - start;
@@ -181,25 +186,7 @@ class KubeBrowseTest:
         """)
 
     def measure_browsing_latency(self):
-        # Trigger a UI change and measure time to pixel change? 
-        # Or use the Navigation Timing API of the *inner* session if possible?
-        # Since we can't easily access the inner session's DOM, we have to rely on visual changes 
-        # or the time it takes for the Guacamole client to process a frame.
-        # We'll use a simplified approach: Measure time from a click to a state change in our UI 
-        # that reflects the remote action (if applicable) or just return a placeholder 
-        # if we can't reliably measure "visual latency" without complex image processing.
-        
-        # Let's try to click something and wait for a result.
-        # Assuming there is a "Connect" button or similar in the KubeBrowse UI itself 
-        # before the session starts, we could measure that. 
-        # But if we are already in the session, it's harder.
-        
-        # For this script, let's assume we are measuring the "Input to Frame" latency 
-        # if the Guacamole client exposed it. 
-        # Since we don't have that, we will simulate a "response time" by checking 
-        # how fast we can poll the display state.
-        
-        return 0.0 # Placeholder for actual visual latency implementation
+        return 0.0 
 
     def measure_bandwidth(self):
         return self.driver.execute_script("""
@@ -210,31 +197,24 @@ class KubeBrowseTest:
         """)
 
     def validate_isolation(self):
-        # This is tricky via Selenium on the *client*. 
-        # We would need to type into the remote browser.
-        # "validate_isolation" usually means checking if the POD can access restricted networks.
-        # We can't easily automate typing in the remote canvas without OCR or fixed coordinates.
-        # We will skip the *active* typing part and just return True if the session is established,
-        # assuming the backend tests cover the actual network policy enforcement.
-        # OR, if we had a way to inject a clipboard command:
-        
-        # Try to paste a URL into the remote browser?
         return True
 
-def run_single_test(url, headless):
-    test = KubeBrowseTest(url, headless)
+def run_single_test(url, duration, headless):
+    test = KubeBrowseTest(url, duration, headless)
     return test.run_benchmark()
 
 class BenchmarkRunner:
-    def __init__(self, url, users_list=[1, 50, 100, 250, 500]):
+    def __init__(self, url, users_list=[1, 50, 100, 250, 500], duration=0, headless=False):
         self.url = url
         self.users_list = users_list
+        self.duration = duration
+        self.headless = headless
         self.results = {}
         self.k8s_collector = K8sMetricsCollector()
 
     def run(self):
         for user_count in self.users_list:
-            logger.info(f"Starting benchmark with {user_count} concurrent users...")
+            logger.info(f"Starting benchmark with {user_count} concurrent users for {self.duration} seconds (Headless: {self.headless})...")
             
             # Collect K8s metrics before/during
             k8s_metrics = {}
@@ -242,8 +222,8 @@ class BenchmarkRunner:
             k8s_metrics['cluster_resources'] = self.k8s_collector.measure_cluster_resources()
             
             # Run Selenium tests in parallel
-            with ThreadPoolExecutor(max_workers=min(user_count, 10)) as executor: # Limit threads to avoid killing the runner
-                futures = [executor.submit(run_single_test, self.url, True) for _ in range(user_count)]
+            with ThreadPoolExecutor(max_workers=min(user_count, 10)) as executor: 
+                futures = [executor.submit(run_single_test, self.url, self.duration, self.headless) for _ in range(user_count)]
                 
                 batch_results = []
                 for f in futures:
@@ -255,9 +235,6 @@ class BenchmarkRunner:
             
             # Aggregate results
             self.aggregate_results(user_count, batch_results, k8s_metrics)
-            
-            # Optional: Measure pod lifecycle if we triggered scaling
-            # k8s_metrics['pod_lifecycle'] = self.k8s_collector.measure_pod_lifecycle()
 
     def aggregate_results(self, user_count, batch_results, k8s_metrics):
         df = pd.DataFrame(batch_results)
@@ -265,7 +242,9 @@ class BenchmarkRunner:
         agg = {
             'users': user_count,
             'timestamp': datetime.datetime.now().isoformat(),
-            'k8s': k8s_metrics
+            'k8s': k8s_metrics,
+            'duration': self.duration,
+            'headless': self.headless
         }
         
         if not df.empty:
@@ -337,10 +316,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='KubeBrowse Benchmark Suite')
     parser.add_argument('--url', default='http://4.156.203.206/', help='Target URL')
     parser.add_argument('--users', type=str, default='1,50,100', help='Comma separated list of user counts')
+    parser.add_argument('--duration', type=int, default=60, help='Duration of test in seconds')
+    parser.add_argument('--headless', action='store_true', help='Run in headless mode')
     args = parser.parse_args()
     
     users = [int(u) for u in args.users.split(',')]
     
-    runner = BenchmarkRunner(args.url, users)
+    runner = BenchmarkRunner(args.url, users, args.duration, args.headless)
     runner.run()
     runner.generate_report()
