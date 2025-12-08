@@ -48,9 +48,9 @@ uv run kubebrowse_benchmark.py \
     --max-users 500 \
     --test-duration 3600 \
     --save-interval 30 \
-    --target-url http://192.168.122.202/ \
+    --target-url http://192.168.122.2/ \
     --browser-init-wait 40 \
-    --sessions-api-url "https://192.168.122.203/sessions/" \
+    --sessions-api-url "https://192.168.122.1/sessions/" \
     --session-start-interval 10 \
     --test-duration 600 \
     --headless   2>&1 | tee -a output.log 
