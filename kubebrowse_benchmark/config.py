@@ -31,6 +31,8 @@ class BenchmarkConfig:
     # Browser viewport dimensions (default: 1280x720)
     viewport_width: int = 1280
     viewport_height: int = 720
+    # Browser headless mode (default: False - show browser windows)
+    headless: bool = False
 
 
 @dataclass

@@ -54,7 +54,23 @@ uv run kubebrowse_benchmark.py \
     --save-interval 30 \ 
     --quiet
 ```
+TEST4
 
+```
+uv run kubebrowse_benchmark.py \
+    --namespace browser-sandbox \
+    --max-users 5 \
+    --ramp-up-duration 10 \
+    --ramp-down-duration 10 \
+    --target-url http://192.168.122.2/ \
+    --browser-init-wait 40 \
+    --sessions-api-url "https://192.168.122.1/sessions/" \
+    --sessions-api-insecure \
+    --session-start-interval 10 \
+    --test-duration 600 \
+    --save-interval 30 \ 
+    --quiet
+```
 
 
 

@@ -31,7 +31,7 @@ class BrowserSimulator:
         try:
             self.playwright = await async_playwright().start()
             self.browser = await self.playwright.chromium.launch(
-                headless=False,
+                headless=self.config.headless,
                 args=[
                     '--no-sandbox',
                     '--disable-dev-shm-usage',

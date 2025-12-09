@@ -87,6 +87,16 @@ Examples:
         default=720,
         help='Browser viewport height in pixels (default: 720)'
     )
+    parser.add_argument(
+        '--headless',
+        action='store_true',
+        help='Run browser in headless mode (no visible window)'
+    )
+    parser.add_argument(
+        '--no-headless',
+        action='store_true',
+        help='Run browser with visible window (default)'
+    )
     
     # Sessions API monitoring
     parser.add_argument(
@@ -277,7 +287,8 @@ def create_config_from_args(args) -> BenchmarkConfig:
         browser_init_wait=args.browser_init_wait,
         session_start_interval=args.session_start_interval,
         viewport_width=args.viewport_width,
-        viewport_height=args.viewport_height
+        viewport_height=args.viewport_height,
+        headless=args.headless and not args.no_headless
     )
 
 
