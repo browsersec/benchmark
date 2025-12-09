@@ -37,6 +37,24 @@ python kubebrowse_benchmark.py \
     --test-duration 600
 ```
 
+TEST3 
+
+```python
+uv run kubebrowse_benchmark.py \
+    --namespace browser-sandbox \
+    --max-users 5 \
+    --ramp-up-duration 10 \
+    --ramp-down-duration 10 \
+    --target-url http://localhost:5173/ \
+    --browser-init-wait 40 \
+    --sessions-api-url "https://localhost:4567/sessions/" \
+    --sessions-api-insecure \
+    --session-start-interval 10 \
+    --test-duration 600 \
+    --save-interval 30 \ 
+    --quiet
+```
+
 
 
 

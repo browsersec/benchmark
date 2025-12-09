@@ -398,3 +398,658 @@ Stacktrace:
 2025-06-15 22:36:20,533 - INFO - Received interrupt signal, stopping benchmark...
 2025-06-15 22:36:20,534 - ERROR - Session user_9: Error - ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
 2025-06-15 22:36:24,745 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:37:09,821 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-12-09 23:37:09,821 - INFO - Configuration: BenchmarkConfig(target_url='http://localhost:5173', namespace='browser-sandbox', max_concurrent_users=1, ramp_up_duration=10, test_duration=60, ramp_down_duration=10, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=60, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url='https://localhost:4173', sessions_api_insecure=False, enable_sessions_monitoring=True, browser_init_wait=2, session_start_interval=1.0)
+2025-12-09 23:37:09,822 - INFO - Using default kubectl context or in-cluster configuration
+2025-12-09 23:37:09,822 - INFO - Sessions API monitoring enabled: https://localhost:4173
+2025-12-09 23:37:09,822 - INFO - Browser initialization wait time: 2 seconds
+2025-12-09 23:37:09,822 - INFO - Session start interval: 1.0 seconds
+2025-12-09 23:37:09,822 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-12-09 23:37:09,822 - INFO - Using Playwright for browser automation
+2025-12-09 23:37:09,822 - INFO - Enhanced visualizations will be saved every 60 seconds to benchmark_snapshots/
+2025-12-09 23:37:09,825 - INFO - Using default kubeconfig from kubectl context
+2025-12-09 23:37:09,826 - INFO - Starting KubeBrowse benchmark...
+2025-12-09 23:37:09,826 - INFO - Started periodic visualization saving every 60 seconds
+2025-12-09 23:37:09,827 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:09,843 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '3e3f9fb4-240d-43f9-9343-a069b456d2c2', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:09 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:09,844 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'd9d69f72-0188-4ed3-aba7-daf583043d37', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:09 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:09,848 - WARNING - Failed to fetch sessions data from API: HTTPSConnectionPool(host='localhost', port=4173): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x77577235aab0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2025-12-09 23:37:10,832 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:11,838 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:12,843 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:13,849 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:14,854 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:15,860 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:16,866 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:17,871 - INFO - Active sessions: 0, Completed: 0
+2025-12-09 23:37:18,876 - INFO - Starting 1 new sessions with 1.0s interval
+2025-12-09 23:37:18,876 - INFO - Started session user_1 at 23:37:18
+2025-12-09 23:37:18,876 - INFO - Active sessions: 1, Completed: 0
+2025-12-09 23:37:18,876 - INFO - Session user_1: Starting session
+2025-12-09 23:37:19,864 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '7b97fdcb-c8c3-4316-8ce5-dad11b9ed6fb', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:19 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:19,866 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '9b02921b-5849-4eae-8399-0fbf3873e270', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:19 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:19,871 - WARNING - Failed to fetch sessions data from API: HTTPSConnectionPool(host='localhost', port=4173): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7757723b7350>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2025-12-09 23:37:19,882 - INFO - Active sessions: 1, Completed: 0
+2025-12-09 23:37:20,422 - INFO - Session user_1: Navigating to http://localhost:5173
+2025-12-09 23:37:20,432 - ERROR - Session user_1: Error - Page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+Call log:
+  - navigating to "http://localhost:5173/", waiting until "load"
+
+2025-12-09 23:37:25,434 - WARNING - Session user_1: Normal disconnect failed, attempting force click...
+2025-12-09 23:37:29,889 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'ff3a6103-14cb-49db-a95f-c06d2f85e285', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:29 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:29,890 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '6065759a-5ec6-44f5-a2c2-34c8e0defee6', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:29 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:29,894 - WARNING - Failed to fetch sessions data from API: HTTPSConnectionPool(host='localhost', port=4173): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7757723b7470>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2025-12-09 23:37:30,436 - ERROR - Session user_1: Force disconnect also failed: Locator.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for get_by_role("button", name="Disconnect").nth(1)
+
+2025-12-09 23:37:39,909 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '6cdb732e-f5e4-4588-a247-9660bef223a4', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:39 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:39,910 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '3f53dfa0-9919-49f8-82e1-06c01f540278', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:07:39 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:37:39,913 - WARNING - Failed to fetch sessions data from API: HTTPSConnectionPool(host='localhost', port=4173): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7757723b7b00>: Failed to establish a new connection: [Errno 111] Connection refused'))
+2025-12-09 23:37:42,090 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:45:14,659 - ERROR - Kubeconfig file not found: /home/sanjay7178/benchmark/proxmox.yml
+2025-12-09 23:46:09,052 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-12-09 23:46:09,052 - INFO - Configuration: BenchmarkConfig(target_url='http://localhost:5173/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=10, test_duration=600, ramp_down_duration=10, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url='https://localhost:4567/sessions/', sessions_api_insecure=True, enable_sessions_monitoring=True, browser_init_wait=40, session_start_interval=10.0)
+2025-12-09 23:46:09,052 - INFO - Using default kubectl context or in-cluster configuration
+2025-12-09 23:46:09,052 - INFO - Sessions API monitoring enabled: https://localhost:4567/sessions/
+2025-12-09 23:46:09,052 - INFO - Using insecure HTTPS connections for sessions API
+2025-12-09 23:46:09,052 - INFO - Browser initialization wait time: 40 seconds
+2025-12-09 23:46:09,052 - INFO - Session start interval: 10.0 seconds
+2025-12-09 23:46:09,052 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-12-09 23:46:09,053 - INFO - Using Playwright for browser automation
+2025-12-09 23:46:09,053 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-12-09 23:46:09,056 - INFO - Using default kubeconfig from kubectl context
+2025-12-09 23:46:09,056 - INFO - Starting KubeBrowse benchmark...
+2025-12-09 23:46:09,057 - INFO - Started periodic visualization saving every 30 seconds
+2025-12-09 23:46:09,057 - INFO - Starting 5 new sessions with 10.0s interval
+2025-12-09 23:46:09,057 - INFO - Started session user_1 at 23:46:09
+2025-12-09 23:46:09,058 - INFO - Session user_1: Starting session
+2025-12-09 23:46:09,076 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'cb8e7295-839d-4437-a0a5-8a18931ec974', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:16:09 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:46:09,077 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '8762e628-e3a7-432b-bab0-c4277ce85eda', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:16:09 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:46:09,237 - ERROR - Session user_1: Browser setup failed: BrowserType.launch: Executable doesn't exist at /home/sanjay7178/.cache/ms-playwright/chromium-1200/chrome-linux64/chrome
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     playwright install                                     ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+2025-12-09 23:46:18,007 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:46:18,545 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:46:18,584 - ERROR - Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<async_main() done, defined at /home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py:253> exception=SystemExit(0)>
+Traceback (most recent call last):
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+    self._run_once()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 1898, in _run_once
+    event_list = self._selector.select(timeout)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/selectors.py", line 468, in select
+    fd_event_list = self._selector.poll(timeout, max_ev)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py", line 26, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/controller.py", line 76, in run_benchmark
+    await asyncio.sleep(wait_time)
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/tasks.py", line 649, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 189, in run
+    with Runner(debug=debug) as runner:
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 63, in __exit__
+    self.close()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 71, in close
+    _cancel_all_tasks(loop)
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 201, in _cancel_all_tasks
+    loop.run_until_complete(tasks.gather(*to_cancel, return_exceptions=True))
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+    self._run_once()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 1936, in _run_once
+    handle._run()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py", line 300, in async_main
+    metrics_file = await controller.run_benchmark()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/controller.py", line 108, in run_benchmark
+    self.metrics_collector.stop_collection()
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/metrics_collector.py", line 57, in stop_collection
+    self.collection_thread.join(timeout=5)
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/threading.py", line 1123, in join
+    self._wait_for_tstate_lock(timeout=max(timeout, 0))
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/threading.py", line 1139, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py", line 26, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+2025-12-09 23:46:48,646 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-12-09 23:46:48,646 - INFO - Configuration: BenchmarkConfig(target_url='http://localhost:5173/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=10, test_duration=600, ramp_down_duration=10, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url='https://localhost:4567/sessions/', sessions_api_insecure=True, enable_sessions_monitoring=True, browser_init_wait=40, session_start_interval=10.0)
+2025-12-09 23:46:48,646 - INFO - Using default kubectl context or in-cluster configuration
+2025-12-09 23:46:48,646 - INFO - Sessions API monitoring enabled: https://localhost:4567/sessions/
+2025-12-09 23:46:48,646 - INFO - Using insecure HTTPS connections for sessions API
+2025-12-09 23:46:48,646 - INFO - Browser initialization wait time: 40 seconds
+2025-12-09 23:46:48,646 - INFO - Session start interval: 10.0 seconds
+2025-12-09 23:46:48,646 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-12-09 23:46:48,646 - INFO - Using Playwright for browser automation
+2025-12-09 23:46:48,646 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-12-09 23:46:48,650 - INFO - Using default kubeconfig from kubectl context
+2025-12-09 23:46:48,650 - INFO - Starting KubeBrowse benchmark...
+2025-12-09 23:46:48,651 - INFO - Started periodic visualization saving every 30 seconds
+2025-12-09 23:46:48,651 - INFO - Starting 5 new sessions with 10.0s interval
+2025-12-09 23:46:48,651 - INFO - Started session user_1 at 23:46:48
+2025-12-09 23:46:48,651 - INFO - Session user_1: Starting session
+2025-12-09 23:46:48,669 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'b73d0788-f859-4b51-99bb-057ddf96b9e9', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:16:48 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:46:48,671 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '2128cbb9-c816-48a7-ac4d-69ce5f1157d3', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:16:48 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:46:49,790 - INFO - Session user_1: Navigating to http://localhost:5173/
+2025-12-09 23:46:50,862 - INFO - Session user_1: Page loaded, starting interactions
+2025-12-09 23:46:51,364 - INFO - Session user_1: Clicking Browser Session link
+2025-12-09 23:46:52,187 - INFO - Session user_1: First click completed in 0.823s
+2025-12-09 23:46:52,188 - INFO - Session user_1: Clicking Create Browser Session
+2025-12-09 23:46:58,652 - INFO - Started session user_3 at 23:46:58
+2025-12-09 23:46:58,652 - INFO - Session user_3: Starting session
+2025-12-09 23:46:58,705 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'cbc4c105-c06f-4ccf-9a04-04b6eccd3695', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:16:58 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:46:58,707 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'f2fbbb48-60cd-4010-a97c-7a4699c413e9', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:16:58 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:46:59,775 - INFO - Session user_3: Navigating to http://localhost:5173/
+2025-12-09 23:47:00,844 - INFO - Session user_3: Page loaded, starting interactions
+2025-12-09 23:47:01,345 - INFO - Session user_3: Clicking Browser Session link
+2025-12-09 23:47:01,390 - INFO - Session user_3: First click completed in 0.046s
+2025-12-09 23:47:01,390 - INFO - Session user_3: Clicking Create Browser Session
+2025-12-09 23:47:08,653 - INFO - Started session user_5 at 23:47:08
+2025-12-09 23:47:08,653 - INFO - Session user_5: Starting session
+2025-12-09 23:47:08,733 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '782d0f48-585d-4159-bccf-de9c44b06bfd', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:08 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:08,735 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'aedf1c7f-a671-48ec-a310-01715fd4eee3', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:08 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:09,688 - INFO - Session user_5: Navigating to http://localhost:5173/
+2025-12-09 23:47:10,748 - INFO - Session user_5: Page loaded, starting interactions
+2025-12-09 23:47:11,249 - INFO - Session user_5: Clicking Browser Session link
+2025-12-09 23:47:11,298 - INFO - Session user_5: First click completed in 0.049s
+2025-12-09 23:47:11,298 - INFO - Session user_5: Clicking Create Browser Session
+2025-12-09 23:47:18,653 - INFO - Started session user_7 at 23:47:18
+2025-12-09 23:47:18,655 - INFO - Session user_7: Starting session
+2025-12-09 23:47:18,795 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '4e9347c9-72b5-4ace-ac49-014b428d8e05', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:18 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:18,805 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'c33b0f4d-caa6-4a02-b453-70c8323e985c', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:18 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:19,901 - INFO - Session user_7: Navigating to http://localhost:5173/
+2025-12-09 23:47:20,796 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20251209_234718
+2025-12-09 23:47:20,965 - INFO - Session user_7: Page loaded, starting interactions
+2025-12-09 23:47:21,466 - INFO - Session user_7: Clicking Browser Session link
+2025-12-09 23:47:22,297 - INFO - Session user_7: First click completed in 0.831s
+2025-12-09 23:47:22,297 - INFO - Session user_7: Clicking Create Browser Session
+2025-12-09 23:47:26,616 - INFO - Session user_1: Pressed ControlOrMeta+F
+2025-12-09 23:47:28,654 - INFO - Started session user_9 at 23:47:28
+2025-12-09 23:47:28,654 - INFO - Active sessions: 5, Completed: 0
+2025-12-09 23:47:28,654 - INFO - Starting 5 new sessions with 10.0s interval
+2025-12-09 23:47:28,656 - INFO - Session user_9: Starting session
+2025-12-09 23:47:28,896 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '04065c80-b4d1-4d37-be02-93d73378b3c0', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:28 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:28,900 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '3c404973-0264-432c-9d3f-e366dd1dea35', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:28 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:29,973 - INFO - Session user_9: Navigating to http://localhost:5173/
+2025-12-09 23:47:31,100 - INFO - Session user_9: Page loaded, starting interactions
+2025-12-09 23:47:31,601 - INFO - Session user_9: Clicking Browser Session link
+2025-12-09 23:47:31,690 - INFO - Session user_9: First click completed in 0.089s
+2025-12-09 23:47:31,690 - INFO - Session user_9: Clicking Create Browser Session
+2025-12-09 23:47:35,841 - INFO - Session user_3: Pressed ControlOrMeta+F
+2025-12-09 23:47:38,654 - INFO - Started session user_6 at 23:47:38
+2025-12-09 23:47:38,654 - INFO - Session user_6: Starting session
+2025-12-09 23:47:39,850 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '299697c2-d47d-41e9-8270-834796c3f54b', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:39 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:40,051 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '2e3225b1-4aff-4e60-be23-9fdd603b056b', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:40 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:40,223 - INFO - Session user_6: Navigating to http://localhost:5173/
+2025-12-09 23:47:42,639 - INFO - Session user_6: Page loaded, starting interactions
+2025-12-09 23:47:43,140 - INFO - Session user_6: Clicking Browser Session link
+2025-12-09 23:47:43,218 - INFO - Session user_6: First click completed in 0.077s
+2025-12-09 23:47:43,218 - INFO - Session user_6: Clicking Create Browser Session
+2025-12-09 23:47:45,826 - INFO - Session user_5: Pressed ControlOrMeta+F
+2025-12-09 23:47:48,655 - INFO - Started session user_8 at 23:47:48
+2025-12-09 23:47:48,656 - INFO - Session user_8: Starting session
+2025-12-09 23:47:50,436 - INFO - Session user_8: Navigating to http://localhost:5173/
+2025-12-09 23:47:53,049 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '5808f783-e75f-4d0b-9498-0f68ace26887', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:52 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:53,343 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '9ca9e589-2f5d-4433-ba9f-bd40c17f43bf', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:17:53 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:47:53,858 - INFO - Saved visualization snapshot 2 to benchmark_snapshots/snapshot_002_20251209_234750
+2025-12-09 23:47:53,962 - INFO - Session user_8: Page loaded, starting interactions
+2025-12-09 23:47:54,464 - INFO - Session user_8: Clicking Browser Session link
+2025-12-09 23:47:54,551 - INFO - Session user_8: First click completed in 0.087s
+2025-12-09 23:47:54,551 - INFO - Session user_8: Clicking Create Browser Session
+2025-12-09 23:47:56,620 - INFO - Session user_1: Video started.
+2025-12-09 23:47:57,455 - INFO - Session user_7: Pressed ControlOrMeta+F
+2025-12-09 23:47:58,657 - INFO - Started session user_10 at 23:47:58
+2025-12-09 23:47:58,660 - INFO - Session user_10: Starting session
+2025-12-09 23:48:00,089 - INFO - Session user_10: Navigating to http://localhost:5173/
+2025-12-09 23:48:01,764 - INFO - Session user_10: Page loaded, starting interactions
+2025-12-09 23:48:01,772 - ERROR - Session user_9: Timeout waiting for elements
+2025-12-09 23:48:02,265 - INFO - Session user_10: Clicking Browser Session link
+2025-12-09 23:48:02,370 - INFO - Session user_10: First click completed in 0.105s
+2025-12-09 23:48:02,371 - INFO - Session user_10: Clicking Create Browser Session
+2025-12-09 23:48:05,843 - INFO - Session user_3: Video started.
+2025-12-09 23:48:08,671 - INFO - Started session user_12 at 23:48:08
+2025-12-09 23:48:08,672 - INFO - Session user_12: Starting session
+2025-12-09 23:48:10,049 - INFO - Session user_12: Navigating to http://localhost:5173/
+2025-12-09 23:48:13,269 - ERROR - Session user_6: Timeout waiting for elements
+2025-12-09 23:48:15,829 - INFO - Session user_5: Video started.
+2025-12-09 23:48:18,673 - INFO - Started session user_14 at 23:48:18
+2025-12-09 23:48:18,673 - INFO - Active sessions: 8, Completed: 0
+2025-12-09 23:48:18,673 - INFO - Starting 7 new sessions with 10.0s interval
+2025-12-09 23:48:18,674 - INFO - Session user_14: Starting session
+2025-12-09 23:48:20,137 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '2837053b-7ccf-4f75-a030-4ce28d01c198', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:18:20 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:48:20,157 - INFO - Session user_14: Navigating to http://localhost:5173/
+2025-12-09 23:48:20,354 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '2c0e1348-538f-444e-89ae-7d5770c437c6', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:18:20 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:48:23,103 - WARNING - Failed to fetch sessions data from API: HTTPSConnectionPool(host='localhost', port=4567): Max retries exceeded with url: /sessions/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)')))
+2025-12-09 23:48:24,616 - ERROR - Session user_8: Timeout waiting for elements
+2025-12-09 23:48:26,371 - INFO - Saved visualization snapshot 3 to benchmark_snapshots/snapshot_003_20251209_234823
+2025-12-09 23:48:27,460 - INFO - Session user_7: Video started.
+2025-12-09 23:48:28,677 - INFO - Started session user_9 at 23:48:28
+2025-12-09 23:48:28,677 - INFO - Session user_9: Starting session
+2025-12-09 23:48:30,230 - INFO - Session user_9: Navigating to http://localhost:5173/
+2025-12-09 23:48:32,427 - ERROR - Session user_10: Timeout waiting for elements
+2025-12-09 23:48:33,456 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'caad1392-946d-4271-b6e4-9428f9e2ed6d', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:18:33 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:48:33,471 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'c73933d3-7d1d-45a4-9b3b-162c9cbabe58', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:18:33 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:48:33,960 - WARNING - Failed to fetch sessions data from API: HTTPSConnectionPool(host='localhost', port=4567): Max retries exceeded with url: /sessions/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)')))
+2025-12-09 23:48:38,679 - INFO - Started session user_11 at 23:48:38
+2025-12-09 23:48:38,679 - INFO - Session user_11: Starting session
+2025-12-09 23:48:40,052 - ERROR - Session user_12: Error - Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "http://localhost:5173/", waiting until "load"
+
+2025-12-09 23:48:40,376 - INFO - Session user_11: Navigating to http://localhost:5173/
+2025-12-09 23:48:40,393 - ERROR - Session user_11: Error - Page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+Call log:
+  - navigating to "http://localhost:5173/", waiting until "load"
+
+2025-12-09 23:48:44,807 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '6657b119-02dc-405e-b5a2-b112b74a0224', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:18:44 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:48:45,064 - WARNING - Session user_12: Normal disconnect failed, attempting force click...
+2025-12-09 23:48:45,137 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '83dd79dc-f79a-43e0-a190-6cf3a3a7e7cf', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:18:44 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:48:45,405 - WARNING - Session user_11: Normal disconnect failed, attempting force click...
+2025-12-09 23:48:47,173 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:51:27,218 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-12-09 23:51:27,218 - INFO - Configuration: BenchmarkConfig(target_url='http://localhost:5173/', namespace='browser-sandbox', max_concurrent_users=50, ramp_up_duration=10, test_duration=600, ramp_down_duration=10, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url='https://localhost:4567/sessions/', sessions_api_insecure=True, enable_sessions_monitoring=True, browser_init_wait=40, session_start_interval=10.0)
+2025-12-09 23:51:27,218 - INFO - Using default kubectl context or in-cluster configuration
+2025-12-09 23:51:27,219 - INFO - Sessions API monitoring enabled: https://localhost:4567/sessions/
+2025-12-09 23:51:27,219 - INFO - Using insecure HTTPS connections for sessions API
+2025-12-09 23:51:27,219 - INFO - Browser initialization wait time: 40 seconds
+2025-12-09 23:51:27,219 - INFO - Session start interval: 10.0 seconds
+2025-12-09 23:51:27,219 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-12-09 23:51:27,219 - INFO - Using Playwright for browser automation
+2025-12-09 23:51:27,219 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-12-09 23:51:27,223 - INFO - Using default kubeconfig from kubectl context
+2025-12-09 23:51:27,223 - INFO - Starting KubeBrowse benchmark...
+2025-12-09 23:51:27,224 - INFO - Started periodic visualization saving every 30 seconds
+2025-12-09 23:51:27,226 - INFO - Starting 5 new sessions with 10.0s interval
+2025-12-09 23:51:27,226 - INFO - Session user_1: Starting session
+2025-12-09 23:51:27,252 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'd3193de0-4375-432b-acbb-06915b4f9cdc', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:21:27 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:51:27,253 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'fa6671e6-7fc9-43fb-b4fe-fd24044c9baf', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:21:27 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:51:27,755 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:51:28,216 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:51:28,254 - ERROR - Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<async_main() done, defined at /home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py:253> exception=SystemExit(0)>
+Traceback (most recent call last):
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+    self._run_once()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 1898, in _run_once
+    event_list = self._selector.select(timeout)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/selectors.py", line 468, in select
+    fd_event_list = self._selector.poll(timeout, max_ev)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py", line 26, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/controller.py", line 128, in run_benchmark
+    await asyncio.sleep(wait_time)
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/tasks.py", line 649, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 189, in run
+    with Runner(debug=debug) as runner:
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 63, in __exit__
+    self.close()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 71, in close
+    _cancel_all_tasks(loop)
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/runners.py", line 201, in _cancel_all_tasks
+    loop.run_until_complete(tasks.gather(*to_cancel, return_exceptions=True))
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+    self.run_forever()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+    self._run_once()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/base_events.py", line 1936, in _run_once
+    handle._run()
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py", line 300, in async_main
+    metrics_file = await controller.run_benchmark()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/controller.py", line 191, in run_benchmark
+    self.metrics_collector.stop_collection()
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/metrics_collector.py", line 57, in stop_collection
+    self.collection_thread.join(timeout=5)
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/threading.py", line 1123, in join
+    self._wait_for_tstate_lock(timeout=max(timeout, 0))
+  File "/home/sanjay7178/miniforge3/envs/bench/lib/python3.11/threading.py", line 1139, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sanjay7178/benchmark/kubebrowse_benchmark/cli.py", line 26, in signal_handler
+    sys.exit(0)
+SystemExit: 0
+2025-12-09 23:51:28,258 - ERROR - Task was destroyed but it is pending!
+task: <Task cancelling name='Task-2' coro=<LoadTestController._run_session() running at /home/sanjay7178/benchmark/kubebrowse_benchmark/controller.py:236> wait_for=<Future cancelled> cb=[ProtocolCallback.__init__.<locals>.cb() at /home/sanjay7178/miniforge3/envs/bench/lib/python3.11/site-packages/playwright/_impl/_connection.py:230, gather.<locals>._done_callback() at /home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/tasks.py:764]>
+2025-12-09 23:51:28,258 - ERROR - Task was destroyed but it is pending!
+task: <Task cancelling name='Task-3' coro=<Connection.run() running at /home/sanjay7178/miniforge3/envs/bench/lib/python3.11/site-packages/playwright/_impl/_connection.py:314> wait_for=<Future cancelled> cb=[gather.<locals>._done_callback() at /home/sanjay7178/miniforge3/envs/bench/lib/python3.11/asyncio/tasks.py:764]>
+2025-12-09 23:51:41,218 - INFO - Starting KubeBrowse comprehensive benchmark suite...
+2025-12-09 23:51:41,218 - INFO - Configuration: BenchmarkConfig(target_url='http://localhost:5173/', namespace='browser-sandbox', max_concurrent_users=5, ramp_up_duration=10, test_duration=600, ramp_down_duration=10, polling_interval=10, websocket_timeout=30, api_timeout=10, save_visualizations=True, save_interval=30, output_dir='benchmark_snapshots', kubeconfig_path=None, sessions_api_url='https://localhost:4567/sessions/', sessions_api_insecure=True, enable_sessions_monitoring=True, browser_init_wait=40, session_start_interval=10.0)
+2025-12-09 23:51:41,218 - INFO - Using default kubectl context or in-cluster configuration
+2025-12-09 23:51:41,218 - INFO - Sessions API monitoring enabled: https://localhost:4567/sessions/
+2025-12-09 23:51:41,218 - INFO - Using insecure HTTPS connections for sessions API
+2025-12-09 23:51:41,218 - INFO - Browser initialization wait time: 40 seconds
+2025-12-09 23:51:41,218 - INFO - Session start interval: 10.0 seconds
+2025-12-09 23:51:41,218 - INFO - Using non-interactive matplotlib backend for thread safety
+2025-12-09 23:51:41,218 - INFO - Using Playwright for browser automation
+2025-12-09 23:51:41,218 - INFO - Enhanced visualizations will be saved every 30 seconds to benchmark_snapshots/
+2025-12-09 23:51:41,222 - INFO - Using default kubeconfig from kubectl context
+2025-12-09 23:51:41,222 - INFO - Starting KubeBrowse benchmark...
+2025-12-09 23:51:41,223 - INFO - Started periodic visualization saving every 30 seconds
+2025-12-09 23:51:41,239 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'a5d2309b-25f2-4542-a591-6f3b5c8839eb', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:21:41 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:51:41,241 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '185f4b4b-d51e-485a-811a-4c38fbf1fe05', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:21:41 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:51:42,230 - INFO - Starting 1 new sessions with 10.0s interval
+2025-12-09 23:51:42,231 - INFO - Session user_1: Starting session
+2025-12-09 23:51:43,246 - INFO - Session user_1: Navigating to http://localhost:5173/
+2025-12-09 23:51:44,243 - INFO - Starting 1 new sessions with 10.0s interval
+2025-12-09 23:51:44,320 - INFO - Session user_1: Page loaded, starting interactions
+2025-12-09 23:51:44,822 - INFO - Session user_1: Clicking Browser Session link
+2025-12-09 23:51:44,862 - INFO - Session user_1: First click completed in 0.039s
+2025-12-09 23:51:44,862 - INFO - Session user_1: Clicking Create Browser Session
+2025-12-09 23:51:51,272 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '4a0d6840-1f33-4417-9f9d-a41ba29a2bff', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:21:51 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:51:51,274 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '33e5f5df-639a-44f2-8d1d-f0a59928ea5b', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:21:51 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:51:52,233 - INFO - Starting 1 new sessions with 10.0s interval
+2025-12-09 23:51:52,234 - INFO - Session user_2: Starting session
+2025-12-09 23:51:53,271 - INFO - Session user_2: Navigating to http://localhost:5173/
+2025-12-09 23:51:54,333 - INFO - Session user_2: Page loaded, starting interactions
+2025-12-09 23:51:54,834 - INFO - Session user_2: Clicking Browser Session link
+2025-12-09 23:51:55,662 - INFO - Session user_2: First click completed in 0.827s
+2025-12-09 23:51:55,662 - INFO - Session user_2: Clicking Create Browser Session
+2025-12-09 23:52:01,301 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '8e7c5d95-1e86-4106-8c2b-0a5ae888b194', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:01 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:01,304 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '7c299359-d212-4a76-b986-425214a5a5b9', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:01 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:02,234 - INFO - Starting 1 new sessions with 10.0s interval
+2025-12-09 23:52:02,234 - INFO - Session user_3: Starting session
+2025-12-09 23:52:03,241 - INFO - Session user_3: Navigating to http://localhost:5173/
+2025-12-09 23:52:04,297 - INFO - Session user_3: Page loaded, starting interactions
+2025-12-09 23:52:04,799 - INFO - Session user_3: Clicking Browser Session link
+2025-12-09 23:52:04,846 - INFO - Session user_3: First click completed in 0.046s
+2025-12-09 23:52:04,846 - INFO - Session user_3: Clicking Create Browser Session
+2025-12-09 23:52:11,382 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '384c25f1-1a05-483a-ab1e-fcdea1910faf', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:11 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:11,393 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'e999c6ea-2a97-4540-82d5-f5d7a9972cd2', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:11 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:12,235 - INFO - Starting 1 new sessions with 10.0s interval
+2025-12-09 23:52:12,236 - INFO - Session user_4: Starting session
+2025-12-09 23:52:13,059 - INFO - Saved visualization snapshot 1 to benchmark_snapshots/snapshot_001_20251209_235211
+2025-12-09 23:52:13,372 - INFO - Session user_4: Navigating to http://localhost:5173/
+2025-12-09 23:52:14,486 - INFO - Session user_4: Page loaded, starting interactions
+2025-12-09 23:52:14,987 - INFO - Session user_4: Clicking Browser Session link
+2025-12-09 23:52:15,040 - INFO - Session user_4: First click completed in 0.053s
+2025-12-09 23:52:15,040 - INFO - Session user_4: Clicking Create Browser Session
+2025-12-09 23:52:19,306 - INFO - Session user_1: Pressed ControlOrMeta+F
+2025-12-09 23:52:21,472 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '593e4cbe-76b8-4e91-a6ff-78ce04a9adc5', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:21 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:21,475 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': '218192d0-4665-47fe-b466-1cbb40610b6a', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:21 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:22,237 - INFO - Session user_5: Starting session
+2025-12-09 23:52:23,650 - INFO - Session user_5: Navigating to http://localhost:5173/
+2025-12-09 23:52:24,814 - INFO - Session user_5: Page loaded, starting interactions
+2025-12-09 23:52:25,315 - INFO - Session user_5: Clicking Browser Session link
+2025-12-09 23:52:26,157 - INFO - Session user_5: First click completed in 0.841s
+2025-12-09 23:52:26,157 - INFO - Session user_5: Clicking Create Browser Session
+2025-12-09 23:52:30,117 - INFO - Session user_2: Pressed ControlOrMeta+F
+2025-12-09 23:52:31,896 - WARNING - Could not get metrics for node kubebrowse-cluster-control-plane: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'c7a74634-f8e0-424a-8a3a-ca47ad2bda6a', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:31 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:32,267 - WARNING - Could not get metrics for node kubebrowse-cluster-worker: (503)
+Reason: Service Unavailable
+HTTP response headers: HTTPHeaderDict({'Audit-Id': 'b713d809-a732-46c1-adc7-6eae24053abb', 'Cache-Control': 'no-cache, private', 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'X-Kubernetes-Pf-Flowschema-Uid': '3d3db687-fdeb-4d99-8f87-ff5093d0f1e1', 'X-Kubernetes-Pf-Prioritylevel-Uid': '793a8465-f4a8-4bba-9389-fe0f96d3e54e', 'Date': 'Tue, 09 Dec 2025 18:22:32 GMT', 'Content-Length': '20'})
+HTTP response body: service unavailable
+
+
+2025-12-09 23:52:33,402 - INFO - Received interrupt signal, stopping benchmark...
+2025-12-09 23:52:37,213 - WARNING - Failed to fetch sessions data from API: HTTPSConnectionPool(host='localhost', port=4567): Max retries exceeded with url: /sessions/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)')))

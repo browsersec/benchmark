@@ -1,0 +1,145 @@
+{
+  "timestamps": [
+    "2025-12-09T23:46:48.650659",
+    "2025-12-09T23:46:58.697438",
+    "2025-12-09T23:47:08.725828",
+    "2025-12-09T23:47:18.759312"
+  ],
+  "node_metrics": {},
+  "pod_counts": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "hpa_metrics": {
+    "browser-sandbox-api-hpa": {
+      "current_replicas": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "desired_replicas": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cpu_utilization": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "memory_utilization": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "browser-sandbox-fronted-hpa": {
+      "current_replicas": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "desired_replicas": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cpu_utilization": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "memory_utilization": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "guacd-hpa": {
+      "current_replicas": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "desired_replicas": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cpu_utilization": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "memory_utilization": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "session_metrics": [],
+  "websocket_metrics": [],
+  "api_latency": [],
+  "api_sessions": [
+    {
+      "active_sessions": 0,
+      "connection_ids": [],
+      "total_connections": 0,
+      "timestamp": "2025-12-09T23:46:48.684407"
+    },
+    {
+      "active_sessions": 1,
+      "connection_ids": [
+        {
+          "uuid": "$7eb3e92d-97ca-416c-aee2-87371327e6ee"
+        }
+      ],
+      "total_connections": 1,
+      "timestamp": "2025-12-09T23:46:58.714862"
+    },
+    {
+      "active_sessions": 2,
+      "connection_ids": [
+        {
+          "uuid": "$3172f422-ed04-46df-a3b2-9c68d644aade"
+        },
+        {
+          "uuid": "$7eb3e92d-97ca-416c-aee2-87371327e6ee"
+        }
+      ],
+      "total_connections": 2,
+      "timestamp": "2025-12-09T23:47:08.747907"
+    },
+    {
+      "active_sessions": 3,
+      "connection_ids": [
+        {
+          "uuid": "$3172f422-ed04-46df-a3b2-9c68d644aade"
+        },
+        {
+          "uuid": "$0c806ecf-e345-4c91-9854-5132524653d5"
+        },
+        {
+          "uuid": "$7eb3e92d-97ca-416c-aee2-87371327e6ee"
+        }
+      ],
+      "total_connections": 3,
+      "timestamp": "2025-12-09T23:47:18.850675"
+    }
+  ]
+}
