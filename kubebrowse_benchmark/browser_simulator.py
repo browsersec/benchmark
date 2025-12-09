@@ -150,7 +150,7 @@ class BrowserSimulator:
             
             # Interact with guac-display element
             await self.page.locator(".guac-display").press("ControlOrMeta+l")
-            await asyncio.sleep(8)  # Wait for address bar to focus
+            await asyncio.sleep(12)  # Wait for address bar to focus
             
             # Type URL
             await self.page.locator(".guac-display").type("https://tinyurl.com/ytrickroll", delay=100)
