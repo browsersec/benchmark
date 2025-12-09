@@ -180,7 +180,7 @@ class BrowserSimulator:
             
             # Keep session open for configured time (default behavior from run_playwright.py)
             # Using a reasonable wait time for benchmarking
-            wait_time = min(2 * 60, 3600)  # 2 minutes or 1 hour max
+            wait_time = min(2 * 60 * 60, 3600)  # Returns 3600 (1 hour)
             await asyncio.sleep(wait_time)
             
             # Disconnect the session
