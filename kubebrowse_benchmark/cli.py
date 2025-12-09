@@ -97,6 +97,12 @@ Examples:
         action='store_true',
         help='Run browser with visible window (default)'
     )
+    parser.add_argument(
+        '--session-duration',
+        type=int,
+        default=3600,
+        help='How long each browser session stays open after interactions, in seconds (default: 300 = 5 minutes)'
+    )
     
     # Sessions API monitoring
     parser.add_argument(
@@ -288,7 +294,8 @@ def create_config_from_args(args) -> BenchmarkConfig:
         session_start_interval=args.session_start_interval,
         viewport_width=args.viewport_width,
         viewport_height=args.viewport_height,
-        headless=args.headless and not args.no_headless
+        headless=args.headless and not args.no_headless,
+        session_duration=args.session_duration
     )
 
 

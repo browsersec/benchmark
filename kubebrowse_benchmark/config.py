@@ -33,6 +33,9 @@ class BenchmarkConfig:
     viewport_height: int = 720
     # Browser headless mode (default: False - show browser windows)
     headless: bool = False
+    # Session duration - how long each browser session stays open after interactions (seconds)
+    # TODO: Make this a configurable parameter
+    session_duration: int = 3600  # Default 1 hour
 
 
 @dataclass

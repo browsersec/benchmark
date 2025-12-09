@@ -83,15 +83,32 @@ uv run kubebrowse_benchmark.py \
     --ramp-down-duration 60 \
     --target-url http://192.168.122.2/ \
     --browser-init-wait 40 \
-    --sessions-api-url "https://192.168.122.1/sessions/" \
+    --sessions-api-url "https://192.168.122.3:4567/sessions/" \
     --sessions-api-insecure \
-    --session-start-interval 60 \
+    --session-start-interval 20 \
     --test-duration 600 \
     --save-interval 30 \
     --quiet \
     --headless
 ```
-
+TEST6
+```
+uv run kubebrowse_benchmark.py \
+    --namespace browser-sandbox \
+    --max-users 500 \
+    --ramp-up-duration 3000 \
+    --ramp-down-duration 30 \
+    --target-url http://192.168.122.2/ \
+    --browser-init-wait 40 \
+    --sessions-api-url "https://192.168.122.3:4567/sessions/" \
+    --sessions-api-insecure \
+    --session-start-interval 6 \
+    --session-duration 1200 \
+    --test-duration 60 \
+    --save-interval 30 \
+    --quiet \
+    --headless
+```
 
 
 Visualization Instructions:

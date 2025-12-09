@@ -178,9 +178,9 @@ class BrowserSimulator:
             await self.page.get_by_role("button", name="Copy connection ID to").click()
             await self.page.get_by_role("button", name="Copy connection ID to").click()
             
-            # Keep session open for configured time (default behavior from run_playwright.py)
-            # Using a reasonable wait time for benchmarking
-            wait_time = min(2 * 60 * 60, 3600)  # Returns 3600 (1 hour)
+            # Keep session open for configured duration
+            wait_time = self.config.session_duration
+            logger.info(f"Session {self.session_id}: Keeping session open for {wait_time} seconds")
             await asyncio.sleep(wait_time)
             
             # Disconnect the session
