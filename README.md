@@ -110,6 +110,11 @@ uv run kubebrowse_benchmark.py \
     --headless
 ```
 
+---
+```
+uv run kubebrowse_benchmark.py     --namespace browser-sandbox     --max-users 500     --ramp-up-duration 3000     --ramp-down-duration 30     --target-url http://192.168.122.221/     --browser-init-wait 40     --sessions-api-url "https://192.168.122.220:80/sessions/"     --sessions-api-insecure     --session-start-interval 20    --session-duration 1200     --test-duration 60     --save-interval 30     --quiet    --headless
+```
+
 
 Visualization Instructions:
 ==========================
@@ -117,7 +122,7 @@ Visualization Instructions:
 To generate plots from this snapshot, use the standalone plotting script:
 
 1. Basic dashboard:
-   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json
+   python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.jsonS
 
 2. All visualizations:
    python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.json --all
