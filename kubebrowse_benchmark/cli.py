@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from .config import BenchmarkConfig
+from .config import BenchmarkConfig, BenchmarkMode
 from .controller import LoadTestController
 from .visualization import BenchmarkVisualizer
 
@@ -33,11 +33,17 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  # Browser Session mode (default) - video streaming test
   %(prog)s --kubeconfig ~/.kube/config-prod --max-users 50
   %(prog)s --namespace my-namespace --save-interval 30
   %(prog)s --target-url http://example.com --test-duration 3600
   %(prog)s --sessions-api-url https://172.18.120.152:30006/sessions/ --sessions-api-insecure
   %(prog)s --browser-init-wait 5 --max-users 10 --session-start-interval 2
+  
+  # File Viewer mode - Office Session file upload/viewing test
+  %(prog)s --mode file_viewer --temp-files-dir ./temp_files --max-users 10
+  %(prog)s -m file_viewer --file-upload-interval 3 --office-session-init-wait 10
+  %(prog)s --mode file_viewer --test-files sample1.pdf sample2.docx --max-users 5
         """
     )
     
@@ -101,7 +107,47 @@ Examples:
         '--session-duration',
         type=int,
         default=3600,
-        help='How long each browser session stays open after interactions, in seconds (default: 300 = 5 minutes)'
+        help='How long each browser session stays open after interactions, in seconds (default: 3600 = 1 hour)'
+    )
+    
+    # Benchmark mode selection
+    parser.add_argument(
+        '--mode', '-m',
+        choices=['browser', 'file_viewer'],
+        default='browser',
+        help='Benchmark mode: "browser" for Browser Session (video streaming), "file_viewer" for Office Session (file upload/viewing) (default: browser)'
+    )
+    
+    # File Viewer / Office Session specific settings
+    parser.add_argument(
+        '--temp-files-dir',
+        type=str,
+        default='temp_files',
+        help='Directory containing test files for file viewer benchmark (default: temp_files)'
+    )
+    parser.add_argument(
+        '--test-files',
+        type=str,
+        nargs='+',
+        help='Specific files to upload in file viewer mode (space-separated list of filenames)'
+    )
+    parser.add_argument(
+        '--file-upload-wait',
+        type=float,
+        default=2.0,
+        help='Wait time after each file upload in seconds (default: 2.0)'
+    )
+    parser.add_argument(
+        '--file-upload-interval',
+        type=float,
+        default=6.0,
+        help='Delay between starting each file upload in seconds (default: 6.0)'
+    )
+    parser.add_argument(
+        '--office-session-init-wait',
+        type=float,
+        default=5.0,
+        help='Wait time for office session to initialize in seconds (default: 5.0)'
     )
     
     # Sessions API monitoring
@@ -273,6 +319,9 @@ def create_config_from_args(args) -> BenchmarkConfig:
     # Auto-enable sessions monitoring if API URL is provided
     enable_sessions = args.enable_sessions_monitoring or bool(args.sessions_api_url)
     
+    # Parse benchmark mode
+    benchmark_mode = BenchmarkMode.FILE_VIEWER if args.mode == 'file_viewer' else BenchmarkMode.BROWSER_SESSION
+    
     return BenchmarkConfig(
         target_url=args.target_url,
         namespace=args.namespace,
@@ -295,7 +344,15 @@ def create_config_from_args(args) -> BenchmarkConfig:
         viewport_width=args.viewport_width,
         viewport_height=args.viewport_height,
         headless=args.headless and not args.no_headless,
-        session_duration=args.session_duration
+        session_duration=args.session_duration,
+        # Benchmark mode
+        benchmark_mode=benchmark_mode,
+        # File viewer settings
+        temp_files_dir=args.temp_files_dir,
+        test_files=args.test_files,
+        file_upload_wait=args.file_upload_wait,
+        file_upload_interval=args.file_upload_interval,
+        office_session_init_wait=args.office_session_init_wait
     )
 
 
@@ -332,6 +389,15 @@ async def async_main():
     
     logger.info("Starting KubeBrowse comprehensive benchmark suite...")
     logger.info(f"Configuration: {config}")
+    
+    # Log benchmark mode
+    mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
+    logger.info(f"Benchmark mode: {mode_name}")
+    
+    if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+        logger.info(f"Test files directory: {config.temp_files_dir}")
+        logger.info(f"File upload interval: {config.file_upload_interval} seconds")
+        logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")
     
     if config.kubeconfig_path:
         logger.info(f"Using custom kubeconfig: {config.kubeconfig_path}")

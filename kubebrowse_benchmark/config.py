@@ -2,9 +2,16 @@
 Configuration and data classes for the benchmark suite.
 """
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import Dict, List, Any, Optional
+
+
+class BenchmarkMode(Enum):
+    """Benchmark mode selection"""
+    BROWSER_SESSION = "browser"  # Browser Session - video streaming test
+    FILE_VIEWER = "file_viewer"  # Office Session - file upload/viewing test
 
 
 @dataclass
@@ -34,8 +41,17 @@ class BenchmarkConfig:
     # Browser headless mode (default: False - show browser windows)
     headless: bool = False
     # Session duration - how long each browser session stays open after interactions (seconds)
-    # TODO: Make this a configurable parameter
     session_duration: int = 3600  # Default 1 hour
+    
+    # Benchmark mode selection
+    benchmark_mode: BenchmarkMode = BenchmarkMode.BROWSER_SESSION
+    
+    # File Viewer / Office Session specific settings
+    temp_files_dir: str = "temp_files"  # Directory containing test files
+    test_files: Optional[List[str]] = None  # Custom list of files to upload (None = use defaults)
+    file_upload_wait: float = 2.0  # Wait time after each file upload in seconds
+    file_upload_interval: float = 6.0  # Delay between starting each file upload
+    office_session_init_wait: float = 5.0  # Wait time for office session to initialize
 
 
 @dataclass
@@ -58,11 +74,18 @@ class SessionMetrics:
     total_api_calls: int = 0
     failed_api_calls: int = 0
     errors: List[str] = None
-    console_errors: List[Dict[str, Any]] = None  # New field for console errors
+    console_errors: List[Dict[str, Any]] = None  # Console errors from browser
+    # File viewer specific metrics
+    files_uploaded: int = 0
+    files_failed: int = 0
+    file_upload_times: List[float] = None  # Upload time for each file
+    avg_file_upload_time: Optional[float] = None
     
     def __post_init__(self):
         if self.errors is None:
             self.errors = []
         if self.console_errors is None:
             self.console_errors = []
+        if self.file_upload_times is None:
+            self.file_upload_times = []
 

@@ -39,7 +39,11 @@ class MetricsCollector:
             'session_metrics': [],
             'websocket_metrics': [],
             'api_latency': [],
-            'api_sessions': []  # New field for API sessions data
+            'api_sessions': [],  # API sessions data
+            'concurrent_users': [],  # Track concurrent users over time
+            'etcd_metrics': [],  # etcd cluster metrics
+            'pod_distribution': [],  # Pod distribution across nodes
+            'latency_by_load': [],  # Latency measurements with concurrent user count
         }
         self.running = False
         
@@ -123,6 +127,21 @@ class MetricsCollector:
                     self.metrics_data['hpa_metrics'][hpa_name]['cpu_utilization'].append(cpu_util)
                     self.metrics_data['hpa_metrics'][hpa_name]['memory_utilization'].append(memory_util)
                 
+                # Collect etcd metrics
+                etcd_metrics = self.k8s_monitor.get_etcd_metrics()
+                self.metrics_data['etcd_metrics'].append(etcd_metrics)
+                
+                # Collect pod distribution
+                pod_distribution = self.k8s_monitor.get_pod_distribution()
+                self.metrics_data['pod_distribution'].append(pod_distribution)
+                
+                # Calculate concurrent users (active sessions at this timestamp)
+                concurrent_users = self._calculate_concurrent_users(timestamp)
+                self.metrics_data['concurrent_users'].append(concurrent_users)
+                
+                # Track latency by load for box plots
+                self._update_latency_by_load(concurrent_users)
+                
                 logger.debug(f"Collected metrics at {timestamp}")
                 
             except Exception as e:
@@ -133,6 +152,62 @@ class MetricsCollector:
     def add_session_metrics(self, session_metrics: SessionMetrics):
         """Add session metrics to collection"""
         self.metrics_data['session_metrics'].append(asdict(session_metrics))
+    
+    def _calculate_concurrent_users(self, timestamp: datetime) -> int:
+        """Calculate number of concurrent users at given timestamp"""
+        concurrent = 0
+        for session in self.metrics_data['session_metrics']:
+            try:
+                start_time = session.get('start_time')
+                end_time = session.get('end_time')
+                
+                if start_time:
+                    if isinstance(start_time, str):
+                        start_time = datetime.fromisoformat(start_time)
+                    
+                    # Session started before or at timestamp
+                    if start_time <= timestamp:
+                        if end_time:
+                            if isinstance(end_time, str):
+                                end_time = datetime.fromisoformat(end_time)
+                            # Session ended after timestamp
+                            if end_time >= timestamp:
+                                concurrent += 1
+                        else:
+                            # Session still running
+                            concurrent += 1
+            except Exception:
+                pass
+        
+        return concurrent
+    
+    def _update_latency_by_load(self, concurrent_users: int):
+        """Update latency by load data for box plots"""
+        # Get recent session metrics with response times
+        for session in self.metrics_data['session_metrics']:
+            response_time = session.get('first_click_response_time')
+            if response_time is not None:
+                # Bucket by user load ranges (0-10, 10-25, 25-50, 50-100, 100+)
+                if concurrent_users <= 10:
+                    load_bucket = '1-10'
+                elif concurrent_users <= 25:
+                    load_bucket = '11-25'
+                elif concurrent_users <= 50:
+                    load_bucket = '26-50'
+                elif concurrent_users <= 100:
+                    load_bucket = '51-100'
+                else:
+                    load_bucket = '100+'
+                
+                # Check if this session already has a load bucket assigned
+                if 'load_bucket' not in session:
+                    session['load_bucket'] = load_bucket
+                    self.metrics_data['latency_by_load'].append({
+                        'load_bucket': load_bucket,
+                        'concurrent_users': concurrent_users,
+                        'response_time': response_time,
+                        'file_upload_times': session.get('file_upload_times', [])
+                    })
     
     def save_metrics(self, filename: str = None):
         """Save all collected metrics to file"""

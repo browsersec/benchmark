@@ -10,8 +10,9 @@ from typing import Dict, List
 
 from tqdm import tqdm
 
-from .config import BenchmarkConfig, SessionMetrics
+from .config import BenchmarkConfig, SessionMetrics, BenchmarkMode
 from .browser_simulator import BrowserSimulator
+from .file_viewer_simulator import FileViewerSimulator
 from .metrics_collector import MetricsCollector
 from .visualization import PeriodicVisualizationSaver
 
@@ -128,7 +129,10 @@ class LoadTestController:
                             await asyncio.sleep(wait_time)
                         
                         session_id = f"user_{len(self.completed_sessions) + len(self.active_sessions) + i + 1}"
-                        simulator = BrowserSimulator(self.config, session_id)
+                        
+                        # Create appropriate simulator based on benchmark mode
+                        simulator = self._create_simulator(session_id)
+                        
                         task = asyncio.create_task(self._run_session(simulator))
                         tasks.append(task)
                         self.active_sessions[session_id] = task
@@ -240,6 +244,13 @@ class LoadTestController:
             simulator.metrics.end_time = datetime.now()
             return simulator.metrics
         # Note: Browser is intentionally not closed here to keep windows open
+    
+    def _create_simulator(self, session_id: str):
+        """Create appropriate simulator based on benchmark mode"""
+        if self.config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+            return FileViewerSimulator(self.config, session_id)
+        else:
+            return BrowserSimulator(self.config, session_id)
     
     def _cleanup_completed_sessions(self):
         """Remove completed sessions from active tracking"""

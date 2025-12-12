@@ -169,6 +169,82 @@ class KubernetesMonitor:
             
         return hpa_status
     
+    def get_etcd_metrics(self) -> Dict[str, Any]:
+        """Get etcd metrics from kube-system namespace if available"""
+        etcd_metrics = {
+            'available': False,
+            'disk_fsync_duration_p99': None,
+            'disk_wal_fsync_duration_p99': None,
+            'backend_commit_duration_p99': None,
+            'leader_changes': 0,
+        }
+        
+        try:
+            # Try to get etcd pod metrics from kube-system
+            etcd_pods = self.v1.list_namespaced_pod(
+                namespace='kube-system',
+                label_selector='component=etcd'
+            )
+            
+            if etcd_pods.items:
+                etcd_metrics['available'] = True
+                etcd_metrics['pod_count'] = len(etcd_pods.items)
+                
+                # Get etcd pod resource usage
+                for pod in etcd_pods.items:
+                    pod_name = pod.metadata.name
+                    try:
+                        pod_metrics = self.metrics_v1beta1.get_namespaced_custom_object(
+                            group="metrics.k8s.io",
+                            version="v1beta1",
+                            namespace='kube-system',
+                            plural="pods",
+                            name=pod_name
+                        )
+                        
+                        for container in pod_metrics.get('containers', []):
+                            if 'etcd' in container['name']:
+                                etcd_metrics['cpu_usage'] = self._parse_cpu(container['usage']['cpu'])
+                                etcd_metrics['memory_usage'] = self._parse_memory(container['usage']['memory'])
+                                break
+                    except Exception as e:
+                        logger.debug(f"Could not get etcd pod metrics: {e}")
+                        
+        except Exception as e:
+            logger.debug(f"Could not get etcd metrics (may not have access): {e}")
+            
+        return etcd_metrics
+    
+    def get_pod_distribution(self) -> Dict[str, Dict[str, int]]:
+        """Get pod distribution across nodes"""
+        distribution = {}
+        
+        try:
+            pods = self.v1.list_namespaced_pod(namespace=self.namespace)
+            
+            for pod in pods.items:
+                node_name = pod.spec.node_name or 'unscheduled'
+                status = pod.status.phase
+                
+                if node_name not in distribution:
+                    distribution[node_name] = {
+                        'running': 0,
+                        'pending': 0,
+                        'failed': 0,
+                        'succeeded': 0,
+                        'unknown': 0,
+                        'total': 0
+                    }
+                
+                distribution[node_name]['total'] += 1
+                status_key = status.lower() if status.lower() in distribution[node_name] else 'unknown'
+                distribution[node_name][status_key] += 1
+                
+        except Exception as e:
+            logger.error(f"Error getting pod distribution: {e}")
+            
+        return distribution
+    
     @staticmethod
     def _parse_cpu(cpu_str: str) -> float:
         """Parse CPU string to cores"""

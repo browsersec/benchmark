@@ -72,7 +72,7 @@ async def run(playwright: Playwright) -> None:
         file_path = TEMP_FILES_DIR / filename
         if file_path.exists():
             print(f"Uploading: {filename}")
-            time.sleep(4)
+            time.sleep(6)
             await upload_file(page, str(file_path))
             print(f"Uploaded: {filename}")
         else:
