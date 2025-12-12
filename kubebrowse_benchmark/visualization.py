@@ -1276,12 +1276,19 @@ class PeriodicVisualizationSaver:
         Create comprehensive WebSocket RTT (Round-Trip Time) visualizations.
         
         This shows the latency of Guacamole WebSocket connections for RDP streaming.
+        Data sources:
+        1. Session metrics (from Playwright frame interception)
+        2. Backend API metrics (from frontend reporting)
+        3. websocket_metrics array (from backend API polling)
         """
         try:
-            # Get RTT data from session metrics
+            # Get RTT data from session metrics (Playwright captured)
             all_rtt_samples = []
             session_rtt_stats = []
             rtt_summaries = data.get('websocket_rtt_summary', [])
+            
+            # Also get RTT data from backend API (websocket_metrics)
+            backend_ws_metrics = data.get('websocket_metrics', [])
             
             for session in data.get('session_metrics', []):
                 rtt_samples = session.get('websocket_rtt_samples', [])
@@ -1299,10 +1306,26 @@ class PeriodicVisualizationSaver:
                         'frames_received': session.get('websocket_frames_received', 0),
                         'bytes_sent': session.get('websocket_bytes_sent', 0),
                         'bytes_received': session.get('websocket_bytes_received', 0),
-                        'samples': len(rtt_samples)
+                        'samples': len(rtt_samples),
+                        'source': 'playwright'
                     })
             
-            if not all_rtt_samples and not rtt_summaries:
+            # Extract RTT data from backend API metrics
+            backend_rtt_data = []
+            for ws_metric in backend_ws_metrics:
+                if ws_metric.get('success') and ws_metric.get('avg_rtt_ms'):
+                    backend_rtt_data.append({
+                        'avg': ws_metric.get('avg_rtt_ms'),
+                        'min': ws_metric.get('min_rtt_ms'),
+                        'max': ws_metric.get('max_rtt_ms'),
+                        'p95': ws_metric.get('p95_rtt_ms'),
+                        'samples': ws_metric.get('total_rtt_samples', 0),
+                        'bytes_sent': ws_metric.get('total_bytes_sent', 0),
+                        'bytes_received': ws_metric.get('total_bytes_received', 0),
+                        'source': 'backend_api'
+                    })
+            
+            if not all_rtt_samples and not rtt_summaries and not backend_rtt_data:
                 # Create placeholder chart
                 fig, ax = plt.subplots(figsize=(12, 6))
                 ax.text(0.5, 0.5, 'No WebSocket RTT Data Available\n\n'

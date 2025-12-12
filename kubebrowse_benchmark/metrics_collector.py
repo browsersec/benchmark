@@ -124,6 +124,11 @@ class MetricsCollector:
                 if self.sessions_monitor:
                     sessions_data = self.sessions_monitor.get_active_sessions()
                     self.metrics_data['api_sessions'].append(sessions_data)
+                    
+                    # Collect WebSocket RTT metrics from backend API
+                    ws_metrics_summary = self.sessions_monitor.get_websocket_metrics_summary()
+                    if ws_metrics_summary.get('success'):
+                        self.metrics_data['websocket_metrics'].append(ws_metrics_summary)
                 
                 # Collect HPA metrics
                 hpa_status = self.k8s_monitor.get_hpa_status()

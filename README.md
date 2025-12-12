@@ -198,10 +198,39 @@ The benchmark now tracks WebSocket round-trip time (RTT) for Guacamole RDP strea
 
 ### How RTT is Measured
 
-1. **Frame Capture**: Playwright intercepts WebSocket frames sent/received during Guacamole sessions
-2. **Timing**: Timestamps are recorded for each frame
-3. **RTT Calculation**: RTT is calculated from frame send/receive timing patterns
-4. **Statistics**: Aggregated statistics are computed (mean, median, percentiles)
+RTT is measured from **two sources** for comprehensive coverage:
+
+#### 1. Playwright Frame Interception (Benchmark Tool)
+- Playwright intercepts WebSocket frames during Guacamole sessions
+- Timestamps are recorded for each frame send/receive
+- RTT is calculated from frame send/receive timing patterns
+
+#### 2. Frontend Metrics Reporting (Production Sessions)
+- Frontend `useWebSocketMetrics` hook tracks RTT in real-time
+- Metrics are reported to backend API endpoint
+- Backend aggregates RTT across all active sessions
+
+### Backend API Endpoints
+
+The Go backend provides these endpoints for WebSocket metrics:
+
+```
+POST /sessions/:connectionID/metrics  - Report metrics from frontend
+GET  /sessions/:connectionID/metrics  - Get metrics for a session
+GET  /sessions/:connectionID/metrics/history - Get historical metrics
+GET  /metrics/websocket              - Get all sessions' metrics
+GET  /metrics/websocket/summary      - Get aggregated summary
+```
+
+### Frontend Integration
+
+The frontend uses `useWebSocketMetrics` hook in `useGuacWebSocket.js`:
+
+```javascript
+// RTT metrics are automatically tracked and exposed globally
+window.guacWebSocketMetrics.getMetrics()  // Get current metrics
+window.guacWebSocketMetrics.getRttSamples()  // Get raw RTT samples
+```
 
 ### RTT Data Captured
 
