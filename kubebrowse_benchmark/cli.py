@@ -235,8 +235,14 @@ Examples:
     parser.add_argument(
         '--output-dir',
         type=str,
-        default='benchmark_snapshots',
-        help='Output directory for visualization snapshots (default: benchmark_snapshots)'
+        default='benchmark_runs',
+        help='Base output directory for benchmark runs (default: benchmark_runs)'
+    )
+    parser.add_argument(
+        '--run-name',
+        type=str,
+        default=None,
+        help='Custom name for this benchmark run (default: auto-generated with timestamp and number)'
     )
     
     # Logging configuration
@@ -314,6 +320,108 @@ def validate_kubeconfig(kubeconfig_path: str) -> bool:
         return False
 
 
+def generate_run_folder(base_dir: str, run_name: str = None, benchmark_mode: str = "browser") -> str:
+    """
+    Generate a unique run folder path with run number and timestamp.
+    
+    Args:
+        base_dir: Base directory for benchmark runs
+        run_name: Optional custom run name
+        benchmark_mode: 'browser' or 'file_viewer'
+    
+    Returns:
+        Full path to the unique run folder
+    
+    Example folder names:
+        benchmark_runs/run_001_browser_20251212_143000/
+        benchmark_runs/run_002_file_viewer_20251212_144500/
+        benchmark_runs/my_custom_run_20251212_145000/
+    """
+    import re
+    from datetime import datetime
+    
+    # Create base directory if it doesn't exist
+    os.makedirs(base_dir, exist_ok=True)
+    
+    # Get current timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    if run_name:
+        # Use custom run name with timestamp
+        # Sanitize the custom name (remove invalid chars)
+        safe_name = re.sub(r'[^\w\-]', '_', run_name)
+        run_folder_name = f"{safe_name}_{timestamp}"
+    else:
+        # Auto-generate with run number
+        # Find existing run folders to determine next run number
+        existing_runs = []
+        if os.path.exists(base_dir):
+            for item in os.listdir(base_dir):
+                if os.path.isdir(os.path.join(base_dir, item)):
+                    # Match pattern: run_XXX_*
+                    match = re.match(r'run_(\d{3})_', item)
+                    if match:
+                        existing_runs.append(int(match.group(1)))
+        
+        # Get next run number
+        next_run_num = max(existing_runs) + 1 if existing_runs else 1
+        
+        # Create folder name with mode indicator
+        mode_suffix = "browser" if benchmark_mode == "browser" else "file_viewer"
+        run_folder_name = f"run_{next_run_num:03d}_{mode_suffix}_{timestamp}"
+    
+    run_folder_path = os.path.join(base_dir, run_folder_name)
+    
+    # Create the run folder
+    os.makedirs(run_folder_path, exist_ok=True)
+    
+    return run_folder_path
+
+
+def _create_run_info(config: BenchmarkConfig, args) -> None:
+    """Create a run_info.json file with benchmark configuration and metadata"""
+    import json
+    from datetime import datetime
+    
+    run_info = {
+        'run_start_time': datetime.now().isoformat(),
+        'run_folder': config.output_dir,
+        'benchmark_mode': 'file_viewer' if config.benchmark_mode == BenchmarkMode.FILE_VIEWER else 'browser',
+        'configuration': {
+            'target_url': config.target_url,
+            'namespace': config.namespace,
+            'max_concurrent_users': config.max_concurrent_users,
+            'ramp_up_duration': config.ramp_up_duration,
+            'test_duration': config.test_duration,
+            'ramp_down_duration': config.ramp_down_duration,
+            'polling_interval': config.polling_interval,
+            'save_interval': config.save_interval,
+            'browser_init_wait': config.browser_init_wait,
+            'session_start_interval': config.session_start_interval,
+            'session_duration': config.session_duration,
+            'viewport': f"{config.viewport_width}x{config.viewport_height}",
+            'headless': config.headless,
+        },
+        'kubernetes': {
+            'kubeconfig_path': config.kubeconfig_path,
+            'sessions_api_url': config.sessions_api_url,
+            'sessions_monitoring_enabled': config.enable_sessions_monitoring,
+        },
+        'file_viewer_settings': {
+            'temp_files_dir': config.temp_files_dir,
+            'file_upload_interval': config.file_upload_interval,
+            'office_session_init_wait': config.office_session_init_wait,
+        } if config.benchmark_mode == BenchmarkMode.FILE_VIEWER else None,
+        'command_line_args': vars(args) if hasattr(args, '__dict__') else str(args),
+    }
+    
+    run_info_path = os.path.join(config.output_dir, 'run_info.json')
+    with open(run_info_path, 'w') as f:
+        json.dump(run_info, f, indent=2, default=str)
+    
+    logger.info(f"Created run info file: {run_info_path}")
+
+
 def create_config_from_args(args) -> BenchmarkConfig:
     """Create BenchmarkConfig from parsed arguments"""
     # Auto-enable sessions monitoring if API URL is provided
@@ -321,6 +429,14 @@ def create_config_from_args(args) -> BenchmarkConfig:
     
     # Parse benchmark mode
     benchmark_mode = BenchmarkMode.FILE_VIEWER if args.mode == 'file_viewer' else BenchmarkMode.BROWSER_SESSION
+    
+    # Generate unique run folder for this benchmark execution
+    mode_str = "file_viewer" if args.mode == 'file_viewer' else "browser"
+    run_folder = generate_run_folder(
+        base_dir=args.output_dir,
+        run_name=args.run_name,
+        benchmark_mode=mode_str
+    )
     
     return BenchmarkConfig(
         target_url=args.target_url,
@@ -334,7 +450,7 @@ def create_config_from_args(args) -> BenchmarkConfig:
         api_timeout=args.api_timeout,
         save_visualizations=args.save_visualizations,
         save_interval=args.save_interval,
-        output_dir=args.output_dir,
+        output_dir=run_folder,  # Use the generated unique run folder
         kubeconfig_path=args.kubeconfig,
         sessions_api_url=args.sessions_api_url,
         sessions_api_insecure=args.sessions_api_insecure,
@@ -388,7 +504,11 @@ async def async_main():
     signal.signal(signal.SIGTERM, signal_handler)
     
     logger.info("Starting KubeBrowse comprehensive benchmark suite...")
+    logger.info(f"Run folder: {config.output_dir}")
     logger.info(f"Configuration: {config}")
+    
+    # Create run info file at the start of the benchmark
+    _create_run_info(config, args)
     
     # Log benchmark mode
     mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
@@ -427,9 +547,10 @@ async def async_main():
         visualizer.create_comprehensive_dashboard()
         
         logger.info("Benchmark completed successfully!")
-        logger.info("Check the 'benchmark_results' directory for detailed reports and visualizations")
+        logger.info(f"All results saved to: {config.output_dir}")
         if config.save_visualizations:
-            logger.info(f"Check the '{config.output_dir}' directory for periodic visualization snapshots")
+            logger.info(f"Periodic snapshots are in: {config.output_dir}/snapshot_*/")
+        logger.info("Check 'benchmark_results' directory for final comprehensive report")
         
     except Exception as e:
         logger.error(f"Benchmark failed: {e}")

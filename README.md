@@ -138,7 +138,7 @@ uv run kubebrowse_benchmark.py \
     --headless \
     --temp-files-dir ./temp_files \
     --file-upload-interval 6 \
-    --office-session-init-wait 5
+    --office-session-init-wait 12
 ```
 
 ---
@@ -263,7 +263,53 @@ WebSocket Traffic:
 Visualization Instructions:
 ==========================
 
-To generate plots from this snapshot, use the standalone plotting script:
+## Benchmark Run Folder Structure
+
+Each benchmark run creates a unique folder with timestamp and run number:
+
+```
+benchmark_runs/
+├── run_001_browser_20251212_143000/
+│   ├── run_info.json              # Run configuration and metadata
+│   ├── snapshot_001_20251212_143030/
+│   │   ├── dashboard.png
+│   │   ├── metrics_snapshot.json
+│   │   ├── summary.txt
+│   │   ├── pod_distribution.png
+│   │   ├── sandbox_pod_type_heatmap.png
+│   │   ├── websocket_rtt.png
+│   │   └── ...
+│   ├── snapshot_002_20251212_143100/
+│   │   └── ...
+│   └── ...
+├── run_002_file_viewer_20251212_144500/
+│   ├── run_info.json
+│   └── ...
+└── my_custom_run_20251212_145000/   # Custom named run
+    └── ...
+```
+
+### Command Line Options
+
+```bash
+# Default: Creates folder like benchmark_runs/run_001_browser_TIMESTAMP/
+uv run kubebrowse_benchmark.py --max-users 10
+
+# Custom base directory
+uv run kubebrowse_benchmark.py --output-dir my_benchmarks --max-users 10
+
+# Custom run name (instead of auto-numbered)
+uv run kubebrowse_benchmark.py --run-name stress_test_v1 --max-users 50
+# Creates: benchmark_runs/stress_test_v1_20251212_143000/
+
+# File viewer mode (auto-detected in folder name)
+uv run kubebrowse_benchmark.py --mode file_viewer --max-users 10
+# Creates: benchmark_runs/run_001_file_viewer_TIMESTAMP/
+```
+
+---
+
+To generate plots from a snapshot, use the standalone plotting script:
 
 1. Basic dashboard:
    python3 /home/sanjay7178/benchmark/plot_metrics_snapshot.py metrics_snapshot.jsonS
