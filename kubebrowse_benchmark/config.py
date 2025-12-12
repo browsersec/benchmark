@@ -80,6 +80,18 @@ class SessionMetrics:
     files_failed: int = 0
     file_upload_times: List[float] = None  # Upload time for each file
     avg_file_upload_time: Optional[float] = None
+    # WebSocket RTT metrics (Guacamole stream)
+    websocket_rtt_samples: List[float] = None  # Individual RTT measurements in ms
+    websocket_rtt_avg: Optional[float] = None  # Average RTT in ms
+    websocket_rtt_min: Optional[float] = None  # Minimum RTT in ms
+    websocket_rtt_max: Optional[float] = None  # Maximum RTT in ms
+    websocket_rtt_p50: Optional[float] = None  # Median RTT in ms
+    websocket_rtt_p95: Optional[float] = None  # 95th percentile RTT in ms
+    websocket_rtt_p99: Optional[float] = None  # 99th percentile RTT in ms
+    websocket_frames_sent: int = 0  # Total frames sent
+    websocket_frames_received: int = 0  # Total frames received
+    websocket_bytes_sent: int = 0  # Total bytes sent
+    websocket_bytes_received: int = 0  # Total bytes received
     
     def __post_init__(self):
         if self.errors is None:
@@ -88,4 +100,6 @@ class SessionMetrics:
             self.console_errors = []
         if self.file_upload_times is None:
             self.file_upload_times = []
+        if self.websocket_rtt_samples is None:
+            self.websocket_rtt_samples = []
 

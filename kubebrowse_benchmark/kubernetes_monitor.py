@@ -3,6 +3,7 @@ Kubernetes cluster monitoring functionality.
 """
 
 import logging
+from datetime import datetime
 from typing import Dict, Any, Optional
 
 from kubernetes import client, config
@@ -244,6 +245,146 @@ class KubernetesMonitor:
             logger.error(f"Error getting pod distribution: {e}")
             
         return distribution
+    
+    def get_sandbox_pod_distribution(self, label_selector: str = "app=browser-sandbox-test") -> Dict[str, Dict[str, Any]]:
+        """
+        Get detailed sandbox pod distribution across nodes, distinguishing between
+        browser pods (rdp-chromium) and file viewer pods (rdp-onlyoffice).
+        
+        Based on internal/k8s/browser.go and internal/k8s/office.go:
+        - Browser pods use container: rdp-chromium
+        - File Viewer (Office) pods use container: rdp-onlyoffice
+        """
+        distribution = {}
+        
+        try:
+            pods = self.v1.list_namespaced_pod(
+                namespace=self.namespace,
+                label_selector=label_selector
+            )
+            
+            for pod in pods.items:
+                node_name = pod.spec.node_name or 'unscheduled'
+                status = pod.status.phase
+                
+                # Determine pod type by container name
+                pod_type = 'unknown'
+                if pod.spec.containers:
+                    for container in pod.spec.containers:
+                        if container.name == 'rdp-chromium':
+                            pod_type = 'browser'
+                            break
+                        elif container.name == 'rdp-onlyoffice':
+                            pod_type = 'file_viewer'
+                            break
+                
+                # Initialize node entry if not exists
+                if node_name not in distribution:
+                    distribution[node_name] = {
+                        'browser': {
+                            'running': 0,
+                            'pending': 0,
+                            'failed': 0,
+                            'succeeded': 0,
+                            'unknown': 0,
+                            'total': 0
+                        },
+                        'file_viewer': {
+                            'running': 0,
+                            'pending': 0,
+                            'failed': 0,
+                            'succeeded': 0,
+                            'unknown': 0,
+                            'total': 0
+                        },
+                        'unknown': {
+                            'running': 0,
+                            'pending': 0,
+                            'failed': 0,
+                            'succeeded': 0,
+                            'unknown': 0,
+                            'total': 0
+                        },
+                        'total_pods': 0,
+                        'browser_total': 0,
+                        'file_viewer_total': 0
+                    }
+                
+                # Update counts
+                distribution[node_name]['total_pods'] += 1
+                distribution[node_name][pod_type]['total'] += 1
+                
+                status_key = status.lower() if status.lower() in distribution[node_name][pod_type] else 'unknown'
+                distribution[node_name][pod_type][status_key] += 1
+                
+                # Update convenience totals
+                if pod_type == 'browser':
+                    distribution[node_name]['browser_total'] += 1
+                elif pod_type == 'file_viewer':
+                    distribution[node_name]['file_viewer_total'] += 1
+                
+        except Exception as e:
+            logger.error(f"Error getting sandbox pod distribution: {e}")
+            
+        return distribution
+    
+    def get_pod_type_summary(self, label_selector: str = "app=browser-sandbox-test") -> Dict[str, Any]:
+        """
+        Get a summary of pod types across the entire cluster.
+        Returns counts for browser and file viewer pods by status.
+        """
+        summary = {
+            'browser': {
+                'running': 0,
+                'pending': 0,
+                'failed': 0,
+                'total': 0
+            },
+            'file_viewer': {
+                'running': 0,
+                'pending': 0,
+                'failed': 0,
+                'total': 0
+            },
+            'by_node': {},
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        try:
+            pods = self.v1.list_namespaced_pod(
+                namespace=self.namespace,
+                label_selector=label_selector
+            )
+            
+            for pod in pods.items:
+                node_name = pod.spec.node_name or 'unscheduled'
+                status = pod.status.phase.lower()
+                
+                # Determine pod type by container name
+                pod_type = None
+                if pod.spec.containers:
+                    for container in pod.spec.containers:
+                        if container.name == 'rdp-chromium':
+                            pod_type = 'browser'
+                            break
+                        elif container.name == 'rdp-onlyoffice':
+                            pod_type = 'file_viewer'
+                            break
+                
+                if pod_type:
+                    summary[pod_type]['total'] += 1
+                    if status in summary[pod_type]:
+                        summary[pod_type][status] += 1
+                    
+                    # Track by node
+                    if node_name not in summary['by_node']:
+                        summary['by_node'][node_name] = {'browser': 0, 'file_viewer': 0}
+                    summary['by_node'][node_name][pod_type] += 1
+                    
+        except Exception as e:
+            logger.error(f"Error getting pod type summary: {e}")
+            
+        return summary
     
     @staticmethod
     def _parse_cpu(cpu_str: str) -> float:

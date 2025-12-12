@@ -35,14 +35,19 @@ class MetricsCollector:
             'timestamps': [],
             'node_metrics': {},
             'pod_counts': [],
+            'browser_pod_counts': [],  # Browser sandbox pods
+            'file_viewer_pod_counts': [],  # File viewer (office) pods
             'hpa_metrics': {},
             'session_metrics': [],
             'websocket_metrics': [],
+            'websocket_rtt_summary': [],  # Aggregated WebSocket RTT stats over time
             'api_latency': [],
             'api_sessions': [],  # API sessions data
             'concurrent_users': [],  # Track concurrent users over time
             'etcd_metrics': [],  # etcd cluster metrics
             'pod_distribution': [],  # Pod distribution across nodes
+            'sandbox_pod_distribution': [],  # Detailed sandbox pod distribution (browser vs file viewer)
+            'pod_type_summary': [],  # Summary of pod types over time
             'latency_by_load': [],  # Latency measurements with concurrent user count
         }
         self.running = False
@@ -89,13 +94,31 @@ class MetricsCollector:
                         metrics['memory_usage_percent']
                     )
                 
-                # Collect pod counts
+                # Collect pod counts (total sandbox pods)
                 browser_pods = self.k8s_monitor.get_pod_metrics(
                     label_selector="app=browser-sandbox-test"
                 )
                 running_pods = sum(1 for pod in browser_pods.values() 
                                  if pod['status'] == 'Running')
                 self.metrics_data['pod_counts'].append(running_pods)
+                
+                # Collect detailed sandbox pod distribution (browser vs file viewer)
+                sandbox_distribution = self.k8s_monitor.get_sandbox_pod_distribution(
+                    label_selector="app=browser-sandbox-test"
+                )
+                self.metrics_data['sandbox_pod_distribution'].append(sandbox_distribution)
+                
+                # Collect pod type summary
+                pod_type_summary = self.k8s_monitor.get_pod_type_summary(
+                    label_selector="app=browser-sandbox-test"
+                )
+                self.metrics_data['pod_type_summary'].append(pod_type_summary)
+                
+                # Track browser and file viewer counts separately
+                browser_running = pod_type_summary['browser']['running']
+                file_viewer_running = pod_type_summary['file_viewer']['running']
+                self.metrics_data['browser_pod_counts'].append(browser_running)
+                self.metrics_data['file_viewer_pod_counts'].append(file_viewer_running)
                 
                 # Collect sessions API data
                 if self.sessions_monitor:
@@ -141,6 +164,9 @@ class MetricsCollector:
                 
                 # Track latency by load for box plots
                 self._update_latency_by_load(concurrent_users)
+                
+                # Aggregate WebSocket RTT statistics
+                self._update_websocket_rtt_summary()
                 
                 logger.debug(f"Collected metrics at {timestamp}")
                 
@@ -222,6 +248,64 @@ class MetricsCollector:
             
         logger.info(f"Metrics saved to {filename}")
         return filename
+    
+    def _update_websocket_rtt_summary(self):
+        """Aggregate WebSocket RTT statistics from all sessions"""
+        import statistics
+        
+        all_rtt_samples = []
+        total_frames_sent = 0
+        total_frames_received = 0
+        total_bytes_sent = 0
+        total_bytes_received = 0
+        sessions_with_rtt = 0
+        
+        for session in self.metrics_data['session_metrics']:
+            rtt_samples = session.get('websocket_rtt_samples', [])
+            if rtt_samples:
+                all_rtt_samples.extend(rtt_samples)
+                sessions_with_rtt += 1
+            
+            total_frames_sent += session.get('websocket_frames_sent', 0)
+            total_frames_received += session.get('websocket_frames_received', 0)
+            total_bytes_sent += session.get('websocket_bytes_sent', 0)
+            total_bytes_received += session.get('websocket_bytes_received', 0)
+        
+        # Calculate aggregate statistics
+        summary = {
+            'timestamp': datetime.now().isoformat(),
+            'sessions_with_rtt': sessions_with_rtt,
+            'total_samples': len(all_rtt_samples),
+            'total_frames_sent': total_frames_sent,
+            'total_frames_received': total_frames_received,
+            'total_bytes_sent': total_bytes_sent,
+            'total_bytes_received': total_bytes_received,
+            'rtt_avg_ms': None,
+            'rtt_min_ms': None,
+            'rtt_max_ms': None,
+            'rtt_p50_ms': None,
+            'rtt_p95_ms': None,
+            'rtt_p99_ms': None,
+        }
+        
+        if all_rtt_samples:
+            sorted_samples = sorted(all_rtt_samples)
+            n = len(sorted_samples)
+            
+            def percentile(data, p):
+                k = (len(data) - 1) * (p / 100)
+                f = int(k)
+                c = f + 1 if f + 1 < len(data) else f
+                return data[f] + (data[c] - data[f]) * (k - f)
+            
+            summary['rtt_avg_ms'] = statistics.mean(sorted_samples)
+            summary['rtt_min_ms'] = min(sorted_samples)
+            summary['rtt_max_ms'] = max(sorted_samples)
+            summary['rtt_p50_ms'] = percentile(sorted_samples, 50)
+            summary['rtt_p95_ms'] = percentile(sorted_samples, 95)
+            summary['rtt_p99_ms'] = percentile(sorted_samples, 99)
+        
+        self.metrics_data['websocket_rtt_summary'].append(summary)
     
     def _make_serializable(self, obj):
         """Convert datetime objects to strings for JSON serialization"""

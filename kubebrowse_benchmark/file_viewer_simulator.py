@@ -13,6 +13,7 @@ from typing import List, Optional
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
 from .config import BenchmarkConfig, SessionMetrics
+from .browser_simulator import WebSocketRTTTracker
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,8 @@ class FileViewerSimulator:
         self.metrics = SessionMetrics(session_id=session_id, start_time=datetime.now())
         self.files_uploaded = 0
         self.files_failed = 0
+        self.ws_tracker: Optional[WebSocketRTTTracker] = None
+        self.active_websockets: List = []
         
     async def setup_browser(self) -> bool:
         """Setup Playwright browser with options"""
@@ -87,6 +90,10 @@ class FileViewerSimulator:
             # Setup console error capture
             self.page.on('console', self._handle_console_message)
             
+            # Setup WebSocket RTT tracking for Guacamole connections
+            self.ws_tracker = WebSocketRTTTracker(self.session_id)
+            self.page.on('websocket', self._handle_websocket)
+            
             # Minimal wait after browser initiation
             logger.debug(f"Session {self.session_id}: Browser initiated, starting immediately")
             await asyncio.sleep(0.5)
@@ -96,6 +103,79 @@ class FileViewerSimulator:
             self.metrics.errors.append(f"Browser setup failed: {e}")
             logger.error(f"Session {self.session_id}: Browser setup failed: {e}")
             return False
+    
+    def _handle_websocket(self, ws) -> None:
+        """Handle WebSocket connection for RTT tracking"""
+        ws_url = ws.url
+        logger.debug(f"Session {self.session_id}: WebSocket connected to {ws_url}")
+        
+        # Track Guacamole WebSocket connections
+        if 'guac' in ws_url.lower() or 'tunnel' in ws_url.lower() or 'websocket' in ws_url.lower():
+            logger.info(f"Session {self.session_id}: Tracking Guacamole WebSocket RTT for {ws_url}")
+            self.active_websockets.append(ws)
+            
+            # Record connection time
+            connection_start = time.time()
+            self.metrics.websocket_connection_time = connection_start
+            
+            # Setup frame handlers
+            ws.on('framesent', lambda payload: asyncio.create_task(
+                self._on_ws_frame_sent(payload)
+            ))
+            ws.on('framereceived', lambda payload: asyncio.create_task(
+                self._on_ws_frame_received(payload)
+            ))
+            ws.on('close', lambda: self._on_ws_close(ws_url))
+    
+    async def _on_ws_frame_sent(self, payload) -> None:
+        """Handle WebSocket frame sent event"""
+        if self.ws_tracker:
+            try:
+                data = payload.payload if hasattr(payload, 'payload') else str(payload)
+                await self.ws_tracker.on_frame_sent(data)
+            except Exception as e:
+                logger.debug(f"Session {self.session_id}: Error tracking WS frame sent: {e}")
+    
+    async def _on_ws_frame_received(self, payload) -> None:
+        """Handle WebSocket frame received event"""
+        if self.ws_tracker:
+            try:
+                data = payload.payload if hasattr(payload, 'payload') else str(payload)
+                await self.ws_tracker.on_frame_received(data)
+            except Exception as e:
+                logger.debug(f"Session {self.session_id}: Error tracking WS frame received: {e}")
+    
+    def _on_ws_close(self, ws_url: str) -> None:
+        """Handle WebSocket close event"""
+        logger.debug(f"Session {self.session_id}: WebSocket closed: {ws_url}")
+    
+    def _collect_websocket_metrics(self) -> None:
+        """Collect WebSocket RTT statistics and store in metrics"""
+        if self.ws_tracker:
+            stats = self.ws_tracker.get_statistics()
+            
+            # Store RTT samples and statistics
+            self.metrics.websocket_rtt_samples = self.ws_tracker.rtt_samples.copy()
+            self.metrics.websocket_rtt_avg = stats['avg']
+            self.metrics.websocket_rtt_min = stats['min']
+            self.metrics.websocket_rtt_max = stats['max']
+            self.metrics.websocket_rtt_p50 = stats['p50']
+            self.metrics.websocket_rtt_p95 = stats['p95']
+            self.metrics.websocket_rtt_p99 = stats['p99']
+            self.metrics.websocket_frames_sent = self.ws_tracker.frames_sent
+            self.metrics.websocket_frames_received = self.ws_tracker.frames_received
+            self.metrics.websocket_bytes_sent = self.ws_tracker.bytes_sent
+            self.metrics.websocket_bytes_received = self.ws_tracker.bytes_received
+            
+            if stats['samples'] > 0:
+                logger.info(
+                    f"Session {self.session_id}: WebSocket RTT - "
+                    f"avg={stats['avg']:.2f}ms, min={stats['min']:.2f}ms, "
+                    f"max={stats['max']:.2f}ms, p95={stats['p95']:.2f}ms, "
+                    f"samples={stats['samples']}"
+                )
+            else:
+                logger.debug(f"Session {self.session_id}: No WebSocket RTT samples collected")
     
     def _handle_console_message(self, msg):
         """Handle console messages from the browser"""
@@ -218,6 +298,8 @@ class FileViewerSimulator:
             logger.error(f"Session {self.session_id}: Error - {e}")
             await self.disconnect_session()
         finally:
+            # Collect WebSocket RTT metrics before ending session
+            self._collect_websocket_metrics()
             self.metrics.end_time = datetime.now()
             
         return self.metrics
