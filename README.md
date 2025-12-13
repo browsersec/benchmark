@@ -149,6 +149,8 @@ both mode
 ```python
 uv run kubebrowse_benchmark.py \
     --mode both \
+    --quiet \
+    --run-name both-test-v1 \
     --namespace browser-sandbox \
     --max-users 500 \
     --ramp-up-duration 3000 \
@@ -161,12 +163,10 @@ uv run kubebrowse_benchmark.py \
     --session-duration 1200 \
     --test-duration 60 \
     --save-interval 30 \
-    --quiet \
     --headless \
     --temp-files-dir ./temp_files \
     --file-upload-interval 6 \
-    --office-session-init-wait 12 \
-    --run-name both-test-v1
+    --office-session-init-wait 12 
 ```
 ---
 
@@ -371,7 +371,7 @@ uv run kubebrowse_benchmark.py --mode both --max-users 20 --test-duration 900
 
 ## Benchmark Modes
 
-The benchmark supports three modes:
+The benchmark supports four modes:
 
 ### 1. Browser Mode (default)
 Tests browser/RDP streaming sessions with video playback:
@@ -393,6 +393,33 @@ uv run kubebrowse_benchmark.py --mode both --max-users 20 --test-duration 600
 
 This creates separate run folders for each mode, allowing you to compare performance
 across different workload types in a single benchmark session.
+
+### 4. Mixed Mode (Simultaneous)
+Runs both browser and file viewer sessions **simultaneously** with configurable ratio:
+```bash
+# 50% browser, 50% file viewer (default)
+uv run kubebrowse_benchmark.py --mode mixed --max-users 20
+
+# 70% browser, 30% file viewer
+uv run kubebrowse_benchmark.py --mode mixed --mixed-ratio 0.7 --max-users 30
+
+# 30% browser, 70% file viewer
+uv run kubebrowse_benchmark.py --mode mixed --mixed-ratio 0.3 --max-users 20
+```
+
+The `--mixed-ratio` parameter controls the proportion of browser sessions:
+- `0.5` = 50% browser, 50% file viewer (default)
+- `0.7` = 70% browser, 30% file viewer
+- `0.3` = 30% browser, 70% file viewer
+
+**Visual timeline (mixed mode):**
+```
+Browser pods:      ████  ████  ████  ████  ████  ████  (60% with ratio=0.6)
+File viewer pods:    ████    ████    ████    ████      (40% with ratio=0.6)
+                  └──────────── Time ─────────────────→
+```
+
+All pod types run concurrently throughout the entire test duration.
 
 ---
 

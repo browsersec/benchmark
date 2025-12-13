@@ -12,6 +12,7 @@ class BenchmarkMode(Enum):
     """Benchmark mode selection"""
     BROWSER_SESSION = "browser"  # Browser Session - video streaming test
     FILE_VIEWER = "file_viewer"  # Office Session - file upload/viewing test
+    MIXED = "mixed"  # Mixed mode - both browser and file viewer sessions simultaneously
 
 
 @dataclass
@@ -52,6 +53,9 @@ class BenchmarkConfig:
     file_upload_wait: float = 2.0  # Wait time after each file upload in seconds
     file_upload_interval: float = 6.0  # Delay between starting each file upload
     office_session_init_wait: float = 5.0  # Wait time for office session to initialize
+    
+    # Mixed mode settings
+    mixed_mode_ratio: float = 0.5  # Ratio of browser sessions (0.0-1.0), e.g., 0.5 = 50% browser, 50% file viewer
 
 
 @dataclass

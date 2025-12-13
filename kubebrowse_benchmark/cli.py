@@ -48,6 +48,10 @@ Examples:
   # Both modes - Run browser then file_viewer consecutively
   %(prog)s --mode both --max-users 20 --test-duration 900
   %(prog)s -m both --run-name my_full_test --output-dir ./results
+  
+  # Mixed mode - Run browser and file_viewer sessions simultaneously
+  %(prog)s --mode mixed --max-users 20 --mixed-ratio 0.5
+  %(prog)s -m mixed --mixed-ratio 0.7 --max-users 30  # 70%% browser, 30%% file viewer
         """
     )
     
@@ -117,9 +121,17 @@ Examples:
     # Benchmark mode selection
     parser.add_argument(
         '--mode', '-m',
-        choices=['browser', 'file_viewer', 'both'],
+        choices=['browser', 'file_viewer', 'both', 'mixed'],
         default='browser',
-        help='Benchmark mode: "browser" for Browser Session (video streaming), "file_viewer" for Office Session (file upload/viewing), "both" to run both modes consecutively (default: browser)'
+        help='Benchmark mode: "browser" for Browser Session (video streaming), "file_viewer" for Office Session (file upload/viewing), "both" to run both modes consecutively, "mixed" to run both simultaneously (default: browser)'
+    )
+    
+    # Mixed mode settings
+    parser.add_argument(
+        '--mixed-ratio',
+        type=float,
+        default=0.5,
+        help='Ratio of browser sessions in mixed mode (0.0-1.0). E.g., 0.5 = 50%% browser, 50%% file viewer (default: 0.5)'
     )
     
     # File Viewer / Office Session specific settings
@@ -331,7 +343,7 @@ def generate_run_folder(base_dir: str, run_name: str = None, benchmark_mode: str
     Args:
         base_dir: Base directory for benchmark runs
         run_name: Optional custom run name
-        benchmark_mode: 'browser' or 'file_viewer'
+        benchmark_mode: 'browser', 'file_viewer', or 'mixed'
     
     Returns:
         Full path to the unique run folder
@@ -339,6 +351,7 @@ def generate_run_folder(base_dir: str, run_name: str = None, benchmark_mode: str
     Example folder names:
         benchmark_runs/run_001_browser_20251212_143000/
         benchmark_runs/run_002_file_viewer_20251212_144500/
+        benchmark_runs/run_003_mixed_20251212_150000/
         benchmark_runs/my_custom_run_browser_20251212_145000/
     """
     import re
@@ -351,7 +364,12 @@ def generate_run_folder(base_dir: str, run_name: str = None, benchmark_mode: str
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
     # Mode suffix for folder naming
-    mode_suffix = "browser" if benchmark_mode == "browser" else "file_viewer"
+    if benchmark_mode == "file_viewer":
+        mode_suffix = "file_viewer"
+    elif benchmark_mode == "mixed":
+        mode_suffix = "mixed"
+    else:
+        mode_suffix = "browser"
     
     if run_name:
         # Use custom run name with mode and timestamp
@@ -373,8 +391,7 @@ def generate_run_folder(base_dir: str, run_name: str = None, benchmark_mode: str
         # Get next run number
         next_run_num = max(existing_runs) + 1 if existing_runs else 1
         
-        # Create folder name with mode indicator
-        mode_suffix = "browser" if benchmark_mode == "browser" else "file_viewer"
+        # Create folder name with mode indicator (mode_suffix already set above)
         run_folder_name = f"run_{next_run_num:03d}_{mode_suffix}_{timestamp}"
     
     run_folder_path = os.path.join(base_dir, run_folder_name)
@@ -390,10 +407,18 @@ def _create_run_info(config: BenchmarkConfig, args) -> None:
     import json
     from datetime import datetime
     
+    # Determine benchmark mode string
+    if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+        mode_str = 'file_viewer'
+    elif config.benchmark_mode == BenchmarkMode.MIXED:
+        mode_str = 'mixed'
+    else:
+        mode_str = 'browser'
+    
     run_info = {
         'run_start_time': datetime.now().isoformat(),
         'run_folder': config.output_dir,
-        'benchmark_mode': 'file_viewer' if config.benchmark_mode == BenchmarkMode.FILE_VIEWER else 'browser',
+        'benchmark_mode': mode_str,
         'configuration': {
             'target_url': config.target_url,
             'namespace': config.namespace,
@@ -418,7 +443,12 @@ def _create_run_info(config: BenchmarkConfig, args) -> None:
             'temp_files_dir': config.temp_files_dir,
             'file_upload_interval': config.file_upload_interval,
             'office_session_init_wait': config.office_session_init_wait,
-        } if config.benchmark_mode == BenchmarkMode.FILE_VIEWER else None,
+        } if config.benchmark_mode in (BenchmarkMode.FILE_VIEWER, BenchmarkMode.MIXED) else None,
+        'mixed_mode_settings': {
+            'ratio': config.mixed_mode_ratio,
+            'browser_percentage': int(config.mixed_mode_ratio * 100),
+            'file_viewer_percentage': int((1 - config.mixed_mode_ratio) * 100),
+        } if config.benchmark_mode == BenchmarkMode.MIXED else None,
         'command_line_args': vars(args) if hasattr(args, '__dict__') else str(args),
     }
     
@@ -450,6 +480,9 @@ def create_config_from_args(args, mode_override: str = None) -> BenchmarkConfig:
     if effective_mode == 'file_viewer':
         benchmark_mode = BenchmarkMode.FILE_VIEWER
         mode_str = "file_viewer"
+    elif effective_mode == 'mixed':
+        benchmark_mode = BenchmarkMode.MIXED
+        mode_str = "mixed"
     else:
         benchmark_mode = BenchmarkMode.BROWSER_SESSION
         mode_str = "browser"
@@ -491,7 +524,9 @@ def create_config_from_args(args, mode_override: str = None) -> BenchmarkConfig:
         test_files=args.test_files,
         file_upload_wait=args.file_upload_wait,
         file_upload_interval=args.file_upload_interval,
-        office_session_init_wait=args.office_session_init_wait
+        office_session_init_wait=args.office_session_init_wait,
+        # Mixed mode settings
+        mixed_mode_ratio=args.mixed_ratio
     )
 
 
@@ -513,11 +548,22 @@ async def run_single_benchmark(args, mode: str) -> str:
     _create_run_info(config, args)
     
     # Log benchmark mode - use WARNING level so it shows with --quiet
-    mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
+    if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION:
+        mode_name = "Browser Session (video streaming)"
+    elif config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+        mode_name = "Office Session (file viewer)"
+    else:
+        mode_name = f"Mixed Mode ({int(config.mixed_mode_ratio * 100)}% browser, {int((1 - config.mixed_mode_ratio) * 100)}% file viewer)"
     logger.warning(f"Benchmark mode: {mode_name}")
     logger.warning(f"Run folder: {config.output_dir}")
     
     if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+        logger.info(f"Test files directory: {config.temp_files_dir}")
+        logger.info(f"File upload interval: {config.file_upload_interval} seconds")
+        logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")
+    
+    if config.benchmark_mode == BenchmarkMode.MIXED:
+        logger.warning(f"Mixed mode ratio: {int(config.mixed_mode_ratio * 100)}% browser, {int((1 - config.mixed_mode_ratio) * 100)}% file viewer")
         logger.info(f"Test files directory: {config.temp_files_dir}")
         logger.info(f"File upload interval: {config.file_upload_interval} seconds")
         logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")
@@ -637,10 +683,21 @@ async def async_main():
             _create_run_info(config, args)
             
             # Log benchmark mode
-            mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
+            if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION:
+                mode_name = "Browser Session (video streaming)"
+            elif config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+                mode_name = "Office Session (file viewer)"
+            else:
+                mode_name = f"Mixed Mode ({int(config.mixed_mode_ratio * 100)}% browser, {int((1 - config.mixed_mode_ratio) * 100)}% file viewer)"
             logger.info(f"Benchmark mode: {mode_name}")
             
             if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+                logger.info(f"Test files directory: {config.temp_files_dir}")
+                logger.info(f"File upload interval: {config.file_upload_interval} seconds")
+                logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")
+            
+            if config.benchmark_mode == BenchmarkMode.MIXED:
+                logger.info(f"Mixed mode ratio: {int(config.mixed_mode_ratio * 100)}% browser, {int((1 - config.mixed_mode_ratio) * 100)}% file viewer")
                 logger.info(f"Test files directory: {config.temp_files_dir}")
                 logger.info(f"File upload interval: {config.file_upload_interval} seconds")
                 logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")

@@ -30,6 +30,9 @@ class LoadTestController:
         self.completed_sessions = []
         self.running = False
         self.last_session_start_time = 0  # Track last session start time
+        self.session_counter = 0  # Counter for mixed mode alternation
+        self.browser_session_count = 0  # Track browser sessions in mixed mode
+        self.file_viewer_session_count = 0  # Track file viewer sessions in mixed mode
         
     async def run_benchmark(self):
         """Run the complete benchmark test"""
@@ -246,9 +249,33 @@ class LoadTestController:
         # Note: Browser is intentionally not closed here to keep windows open
     
     def _create_simulator(self, session_id: str):
-        """Create appropriate simulator based on benchmark mode"""
+        """
+        Create appropriate simulator based on benchmark mode.
+        
+        For mixed mode, alternates between browser and file viewer based on ratio.
+        E.g., with ratio 0.6: browser, browser, browser, file_viewer, file_viewer, browser, ...
+        """
         if self.config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
             return FileViewerSimulator(self.config, session_id)
+        elif self.config.benchmark_mode == BenchmarkMode.MIXED:
+            # Use ratio-based distribution for mixed mode
+            self.session_counter += 1
+            
+            # Calculate expected browser count at this point
+            # If ratio is 0.6, after 10 sessions we expect 6 browser, 4 file_viewer
+            expected_browser_count = int(self.session_counter * self.config.mixed_mode_ratio)
+            
+            # Create browser session if we haven't reached the expected count yet
+            if self.browser_session_count < expected_browser_count:
+                self.browser_session_count += 1
+                session_type = "browser"
+                logger.debug(f"Mixed mode: Creating browser session (browser={self.browser_session_count}, file_viewer={self.file_viewer_session_count})")
+                return BrowserSimulator(self.config, f"{session_id}_browser")
+            else:
+                self.file_viewer_session_count += 1
+                session_type = "file_viewer"
+                logger.debug(f"Mixed mode: Creating file_viewer session (browser={self.browser_session_count}, file_viewer={self.file_viewer_session_count})")
+                return FileViewerSimulator(self.config, f"{session_id}_fileviewer")
         else:
             return BrowserSimulator(self.config, session_id)
     
