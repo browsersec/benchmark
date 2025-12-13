@@ -44,6 +44,10 @@ Examples:
   %(prog)s --mode file_viewer --temp-files-dir ./temp_files --max-users 10
   %(prog)s -m file_viewer --file-upload-interval 3 --office-session-init-wait 10
   %(prog)s --mode file_viewer --test-files sample1.pdf sample2.docx --max-users 5
+  
+  # Both modes - Run browser then file_viewer consecutively
+  %(prog)s --mode both --max-users 20 --test-duration 900
+  %(prog)s -m both --run-name my_full_test --output-dir ./results
         """
     )
     
@@ -113,9 +117,9 @@ Examples:
     # Benchmark mode selection
     parser.add_argument(
         '--mode', '-m',
-        choices=['browser', 'file_viewer'],
+        choices=['browser', 'file_viewer', 'both'],
         default='browser',
-        help='Benchmark mode: "browser" for Browser Session (video streaming), "file_viewer" for Office Session (file upload/viewing) (default: browser)'
+        help='Benchmark mode: "browser" for Browser Session (video streaming), "file_viewer" for Office Session (file upload/viewing), "both" to run both modes consecutively (default: browser)'
     )
     
     # File Viewer / Office Session specific settings
@@ -422,16 +426,32 @@ def _create_run_info(config: BenchmarkConfig, args) -> None:
     logger.info(f"Created run info file: {run_info_path}")
 
 
-def create_config_from_args(args) -> BenchmarkConfig:
-    """Create BenchmarkConfig from parsed arguments"""
+def create_config_from_args(args, mode_override: str = None) -> BenchmarkConfig:
+    """
+    Create BenchmarkConfig from parsed arguments.
+    
+    Args:
+        args: Parsed command line arguments
+        mode_override: Optional mode override for running both modes consecutively
+    
+    Returns:
+        BenchmarkConfig object
+    """
     # Auto-enable sessions monitoring if API URL is provided
     enable_sessions = args.enable_sessions_monitoring or bool(args.sessions_api_url)
     
-    # Parse benchmark mode
-    benchmark_mode = BenchmarkMode.FILE_VIEWER if args.mode == 'file_viewer' else BenchmarkMode.BROWSER_SESSION
+    # Determine the effective mode (use override if provided)
+    effective_mode = mode_override if mode_override else args.mode
+    
+    # Parse benchmark mode (don't handle 'both' here - that's handled at a higher level)
+    if effective_mode == 'file_viewer':
+        benchmark_mode = BenchmarkMode.FILE_VIEWER
+        mode_str = "file_viewer"
+    else:
+        benchmark_mode = BenchmarkMode.BROWSER_SESSION
+        mode_str = "browser"
     
     # Generate unique run folder for this benchmark execution
-    mode_str = "file_viewer" if args.mode == 'file_viewer' else "browser"
     run_folder = generate_run_folder(
         base_dir=args.output_dir,
         run_name=args.run_name,
@@ -472,6 +492,63 @@ def create_config_from_args(args) -> BenchmarkConfig:
     )
 
 
+async def run_single_benchmark(args, mode: str) -> str:
+    """
+    Run a single benchmark with the specified mode.
+    
+    Args:
+        args: Parsed command line arguments
+        mode: Benchmark mode ('browser' or 'file_viewer')
+    
+    Returns:
+        Path to the metrics file
+    """
+    # Create configuration with mode override
+    config = create_config_from_args(args, mode_override=mode)
+    
+    # Create run info file at the start of the benchmark
+    _create_run_info(config, args)
+    
+    # Log benchmark mode
+    mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
+    logger.info(f"Benchmark mode: {mode_name}")
+    logger.info(f"Run folder: {config.output_dir}")
+    
+    if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+        logger.info(f"Test files directory: {config.temp_files_dir}")
+        logger.info(f"File upload interval: {config.file_upload_interval} seconds")
+        logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")
+    
+    if config.kubeconfig_path:
+        logger.info(f"Using custom kubeconfig: {config.kubeconfig_path}")
+    else:
+        logger.info("Using default kubectl context or in-cluster configuration")
+    
+    if config.enable_sessions_monitoring and config.sessions_api_url:
+        logger.info(f"Sessions API monitoring enabled: {config.sessions_api_url}")
+        if config.sessions_api_insecure:
+            logger.info("Using insecure HTTPS connections for sessions API")
+    
+    logger.info(f"Browser initialization wait time: {config.browser_init_wait} seconds")
+    logger.info(f"Session start interval: {config.session_start_interval} seconds")
+    
+    if config.save_visualizations:
+        logger.info(f"Enhanced visualizations will be saved every {config.save_interval} seconds to {config.output_dir}/")
+    
+    # Run benchmark
+    controller = LoadTestController(config)
+    metrics_file = await controller.run_benchmark()
+    
+    # Generate final visualizations
+    visualizer = BenchmarkVisualizer(metrics_file)
+    visualizer.create_comprehensive_dashboard()
+    
+    logger.info(f"{mode_name} benchmark completed successfully!")
+    logger.info(f"Results saved to: {config.output_dir}")
+    
+    return metrics_file
+
+
 async def async_main():
     """Async main function to run the benchmark"""
     # Set matplotlib backend at the very beginning
@@ -496,61 +573,103 @@ async def async_main():
     if args.kubeconfig and not validate_kubeconfig(args.kubeconfig):
         sys.exit(1)
     
-    # Create configuration from arguments
-    config = create_config_from_args(args)
-    
     # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
     logger.info("Starting KubeBrowse comprehensive benchmark suite...")
-    logger.info(f"Run folder: {config.output_dir}")
-    logger.info(f"Configuration: {config}")
-    
-    # Create run info file at the start of the benchmark
-    _create_run_info(config, args)
-    
-    # Log benchmark mode
-    mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
-    logger.info(f"Benchmark mode: {mode_name}")
-    
-    if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
-        logger.info(f"Test files directory: {config.temp_files_dir}")
-        logger.info(f"File upload interval: {config.file_upload_interval} seconds")
-        logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")
-    
-    if config.kubeconfig_path:
-        logger.info(f"Using custom kubeconfig: {config.kubeconfig_path}")
-    else:
-        logger.info("Using default kubectl context or in-cluster configuration")
-    
-    if config.enable_sessions_monitoring and config.sessions_api_url:
-        logger.info(f"Sessions API monitoring enabled: {config.sessions_api_url}")
-        if config.sessions_api_insecure:
-            logger.info("Using insecure HTTPS connections for sessions API")
-    
-    logger.info(f"Browser initialization wait time: {config.browser_init_wait} seconds")
-    logger.info(f"Session start interval: {config.session_start_interval} seconds")
     logger.info("Using non-interactive matplotlib backend for thread safety")
     logger.info("Using Playwright for browser automation")
     
-    if config.save_visualizations:
-        logger.info(f"Enhanced visualizations will be saved every {config.save_interval} seconds to {config.output_dir}/")
-    
     try:
-        # Run benchmark
-        controller = LoadTestController(config)
-        metrics_file = await controller.run_benchmark()
-        
-        # Generate final visualizations
-        visualizer = BenchmarkVisualizer(metrics_file)
-        visualizer.create_comprehensive_dashboard()
-        
-        logger.info("Benchmark completed successfully!")
-        logger.info(f"All results saved to: {config.output_dir}")
-        if config.save_visualizations:
-            logger.info(f"Periodic snapshots are in: {config.output_dir}/snapshot_*/")
-        logger.info("Check 'benchmark_results' directory for final comprehensive report")
+        # Check if we need to run both modes
+        if args.mode == 'both':
+            logger.info("=" * 60)
+            logger.info("Running BOTH benchmark modes consecutively")
+            logger.info("=" * 60)
+            
+            results = []
+            
+            # Run browser mode first
+            logger.info("")
+            logger.info("=" * 60)
+            logger.info("PHASE 1: Browser Session (video streaming) benchmark")
+            logger.info("=" * 60)
+            browser_metrics = await run_single_benchmark(args, 'browser')
+            results.append(('browser', browser_metrics))
+            
+            # Small pause between modes
+            logger.info("")
+            logger.info("=" * 60)
+            logger.info("Pausing 10 seconds before starting file viewer benchmark...")
+            logger.info("=" * 60)
+            await asyncio.sleep(10)
+            
+            # Run file_viewer mode second
+            logger.info("")
+            logger.info("=" * 60)
+            logger.info("PHASE 2: Office Session (file viewer) benchmark")
+            logger.info("=" * 60)
+            file_viewer_metrics = await run_single_benchmark(args, 'file_viewer')
+            results.append(('file_viewer', file_viewer_metrics))
+            
+            # Summary
+            logger.info("")
+            logger.info("=" * 60)
+            logger.info("BOTH MODES COMPLETED SUCCESSFULLY!")
+            logger.info("=" * 60)
+            for mode, metrics_file in results:
+                logger.info(f"  {mode}: {os.path.dirname(metrics_file)}")
+            logger.info("=" * 60)
+            
+        else:
+            # Run single mode benchmark
+            config = create_config_from_args(args)
+            
+            logger.info(f"Run folder: {config.output_dir}")
+            logger.info(f"Configuration: {config}")
+            
+            # Create run info file at the start of the benchmark
+            _create_run_info(config, args)
+            
+            # Log benchmark mode
+            mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
+            logger.info(f"Benchmark mode: {mode_name}")
+            
+            if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
+                logger.info(f"Test files directory: {config.temp_files_dir}")
+                logger.info(f"File upload interval: {config.file_upload_interval} seconds")
+                logger.info(f"Office session init wait: {config.office_session_init_wait} seconds")
+            
+            if config.kubeconfig_path:
+                logger.info(f"Using custom kubeconfig: {config.kubeconfig_path}")
+            else:
+                logger.info("Using default kubectl context or in-cluster configuration")
+            
+            if config.enable_sessions_monitoring and config.sessions_api_url:
+                logger.info(f"Sessions API monitoring enabled: {config.sessions_api_url}")
+                if config.sessions_api_insecure:
+                    logger.info("Using insecure HTTPS connections for sessions API")
+            
+            logger.info(f"Browser initialization wait time: {config.browser_init_wait} seconds")
+            logger.info(f"Session start interval: {config.session_start_interval} seconds")
+            
+            if config.save_visualizations:
+                logger.info(f"Enhanced visualizations will be saved every {config.save_interval} seconds to {config.output_dir}/")
+            
+            # Run benchmark
+            controller = LoadTestController(config)
+            metrics_file = await controller.run_benchmark()
+            
+            # Generate final visualizations
+            visualizer = BenchmarkVisualizer(metrics_file)
+            visualizer.create_comprehensive_dashboard()
+            
+            logger.info("Benchmark completed successfully!")
+            logger.info(f"All results saved to: {config.output_dir}")
+            if config.save_visualizations:
+                logger.info(f"Periodic snapshots are in: {config.output_dir}/snapshot_*/")
+            logger.info("Check 'benchmark_results' directory for final comprehensive report")
         
     except Exception as e:
         logger.error(f"Benchmark failed: {e}")

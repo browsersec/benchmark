@@ -112,7 +112,8 @@ uv run kubebrowse_benchmark.py \
 
 ---
 ```
-uv run kubebrowse_benchmark.py     --namespace browser-sandbox     --max-users 500     --ramp-up-duration 3000     --ramp-down-duration 30     --target-url http://192.168.122.221/     --browser-init-wait 40     --sessions-api-url "https://192.168.122.220:80/sessions/"     --sessions-api-insecure     --session-start-interval 20    --session-duration 1200     --test-duration 60     --save-interval 30     --quiet    --headless
+uv run kubebrowse_benchmark.py  --mode browser   --namespace browser-sandbox     --max-users 500     --ramp-up-duration 3000     --ramp-down-duration 30     --target-url http://192.168.122.221/     --browser-init-wait 40     --sessions-api-url "https://192.168.122.220:80/sessions/"     --sessions-api-insecure     --session-start-interval 20    --session-duration 3600     --test-duration 60     --save-interval 30     --quiet    --headless  --run-name browser-test-v1
+
 ```
 
 ---
@@ -131,14 +132,15 @@ uv run kubebrowse_benchmark.py \
     --sessions-api-url "https://192.168.122.220:80/sessions/" \
     --sessions-api-insecure \
     --session-start-interval 20 \
-    --session-duration 1200 \
+    --session-duration 3600 \
     --test-duration 60 \
     --save-interval 30 \
     --quiet \
     --headless \
     --temp-files-dir ./temp_files \
     --file-upload-interval 6 \
-    --office-session-init-wait 12
+    --office-session-init-wait 12 \
+    --run-name file-test-v1
 ```
 
 ---
@@ -334,7 +336,38 @@ uv run kubebrowse_benchmark.py --run-name stress_test_v1 --max-users 50
 # File viewer mode (auto-detected in folder name)
 uv run kubebrowse_benchmark.py --mode file_viewer --max-users 10
 # Creates: benchmark_runs/run_001_file_viewer_TIMESTAMP/
+
+# Both modes - Run browser then file_viewer consecutively
+uv run kubebrowse_benchmark.py --mode both --max-users 20 --test-duration 900
+# Creates two separate run folders:
+#   benchmark_runs/run_001_browser_TIMESTAMP/
+#   benchmark_runs/run_002_file_viewer_TIMESTAMP/
 ```
+
+## Benchmark Modes
+
+The benchmark supports three modes:
+
+### 1. Browser Mode (default)
+Tests browser/RDP streaming sessions with video playback:
+```bash
+uv run kubebrowse_benchmark.py --mode browser --max-users 50
+```
+
+### 2. File Viewer Mode
+Tests Office Session with file upload and viewing:
+```bash
+uv run kubebrowse_benchmark.py --mode file_viewer --max-users 10
+```
+
+### 3. Both Modes (Consecutive)
+Runs browser mode first, then file viewer mode with a 10-second pause between:
+```bash
+uv run kubebrowse_benchmark.py --mode both --max-users 20 --test-duration 600
+```
+
+This creates separate run folders for each mode, allowing you to compare performance
+across different workload types in a single benchmark session.
 
 ---
 
