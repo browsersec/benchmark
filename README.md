@@ -112,7 +112,7 @@ uv run kubebrowse_benchmark.py \
 
 ---
 ```
-uv run kubebrowse_benchmark.py  --mode browser   --namespace browser-sandbox     --max-users 500     --ramp-up-duration 3000     --ramp-down-duration 30     --target-url http://192.168.122.221/     --browser-init-wait 40     --sessions-api-url "https://192.168.122.220:80/sessions/"     --sessions-api-insecure     --session-start-interval 20    --session-duration 3600     --test-duration 60     --save-interval 30     --quiet    --headless  --run-name browser-test-v1
+uv run kubebrowse_benchmark.py  --mode browser   --namespace browser-sandbox     --max-users 500     --ramp-up-duration 3000     --ramp-down-duration 30     --target-url http://192.168.122.221/     --browser-init-wait 40     --sessions-api-url "https://192.168.122.220:80/sessions/"     --sessions-api-insecure     --session-start-interval 20    --session-duration 1200     --test-duration 60     --save-interval 30     --quiet    --headless  --run-name browser-test-v1
 
 ```
 
@@ -143,6 +143,31 @@ uv run kubebrowse_benchmark.py \
     --run-name file-test-v1
 ```
 
+
+both mode 
+
+```python
+uv run kubebrowse_benchmark.py \
+    --mode both \
+    --namespace browser-sandbox \
+    --max-users 500 \
+    --ramp-up-duration 3000 \
+    --ramp-down-duration 30 \
+    --target-url http://192.168.122.221/ \
+    --browser-init-wait 40 \
+    --sessions-api-url "https://192.168.122.220:80/sessions/" \
+    --sessions-api-insecure \
+    --session-start-interval 20 \
+    --session-duration 1200 \
+    --test-duration 60 \
+    --save-interval 30 \
+    --quiet \
+    --headless \
+    --temp-files-dir ./temp_files \
+    --file-upload-interval 6 \
+    --office-session-init-wait 12 \
+    --run-name both-test-v1
+```
 ---
 
 ## Pod Distribution Heat Map

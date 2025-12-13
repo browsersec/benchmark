@@ -339,7 +339,7 @@ def generate_run_folder(base_dir: str, run_name: str = None, benchmark_mode: str
     Example folder names:
         benchmark_runs/run_001_browser_20251212_143000/
         benchmark_runs/run_002_file_viewer_20251212_144500/
-        benchmark_runs/my_custom_run_20251212_145000/
+        benchmark_runs/my_custom_run_browser_20251212_145000/
     """
     import re
     from datetime import datetime
@@ -350,11 +350,14 @@ def generate_run_folder(base_dir: str, run_name: str = None, benchmark_mode: str
     # Get current timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
+    # Mode suffix for folder naming
+    mode_suffix = "browser" if benchmark_mode == "browser" else "file_viewer"
+    
     if run_name:
-        # Use custom run name with timestamp
+        # Use custom run name with mode and timestamp
         # Sanitize the custom name (remove invalid chars)
         safe_name = re.sub(r'[^\w\-]', '_', run_name)
-        run_folder_name = f"{safe_name}_{timestamp}"
+        run_folder_name = f"{safe_name}_{mode_suffix}_{timestamp}"
     else:
         # Auto-generate with run number
         # Find existing run folders to determine next run number
@@ -509,10 +512,10 @@ async def run_single_benchmark(args, mode: str) -> str:
     # Create run info file at the start of the benchmark
     _create_run_info(config, args)
     
-    # Log benchmark mode
+    # Log benchmark mode - use WARNING level so it shows with --quiet
     mode_name = "Browser Session (video streaming)" if config.benchmark_mode == BenchmarkMode.BROWSER_SESSION else "Office Session (file viewer)"
-    logger.info(f"Benchmark mode: {mode_name}")
-    logger.info(f"Run folder: {config.output_dir}")
+    logger.warning(f"Benchmark mode: {mode_name}")
+    logger.warning(f"Run folder: {config.output_dir}")
     
     if config.benchmark_mode == BenchmarkMode.FILE_VIEWER:
         logger.info(f"Test files directory: {config.temp_files_dir}")
@@ -543,8 +546,8 @@ async def run_single_benchmark(args, mode: str) -> str:
     visualizer = BenchmarkVisualizer(metrics_file)
     visualizer.create_comprehensive_dashboard()
     
-    logger.info(f"{mode_name} benchmark completed successfully!")
-    logger.info(f"Results saved to: {config.output_dir}")
+    logger.warning(f"{mode_name} benchmark completed successfully!")
+    logger.warning(f"Results saved to: {config.output_dir}")
     
     return metrics_file
 
@@ -584,43 +587,44 @@ async def async_main():
     try:
         # Check if we need to run both modes
         if args.mode == 'both':
-            logger.info("=" * 60)
-            logger.info("Running BOTH benchmark modes consecutively")
-            logger.info("=" * 60)
+            # Use WARNING level so messages show even with --quiet
+            logger.warning("=" * 60)
+            logger.warning("Running BOTH benchmark modes consecutively")
+            logger.warning("=" * 60)
             
             results = []
             
             # Run browser mode first
-            logger.info("")
-            logger.info("=" * 60)
-            logger.info("PHASE 1: Browser Session (video streaming) benchmark")
-            logger.info("=" * 60)
+            logger.warning("")
+            logger.warning("=" * 60)
+            logger.warning("PHASE 1: Browser Session (video streaming) benchmark")
+            logger.warning("=" * 60)
             browser_metrics = await run_single_benchmark(args, 'browser')
             results.append(('browser', browser_metrics))
             
             # Small pause between modes
-            logger.info("")
-            logger.info("=" * 60)
-            logger.info("Pausing 10 seconds before starting file viewer benchmark...")
-            logger.info("=" * 60)
+            logger.warning("")
+            logger.warning("=" * 60)
+            logger.warning("Pausing 10 seconds before starting file viewer benchmark...")
+            logger.warning("=" * 60)
             await asyncio.sleep(10)
             
             # Run file_viewer mode second
-            logger.info("")
-            logger.info("=" * 60)
-            logger.info("PHASE 2: Office Session (file viewer) benchmark")
-            logger.info("=" * 60)
+            logger.warning("")
+            logger.warning("=" * 60)
+            logger.warning("PHASE 2: Office Session (file viewer) benchmark")
+            logger.warning("=" * 60)
             file_viewer_metrics = await run_single_benchmark(args, 'file_viewer')
             results.append(('file_viewer', file_viewer_metrics))
             
             # Summary
-            logger.info("")
-            logger.info("=" * 60)
-            logger.info("BOTH MODES COMPLETED SUCCESSFULLY!")
-            logger.info("=" * 60)
+            logger.warning("")
+            logger.warning("=" * 60)
+            logger.warning("BOTH MODES COMPLETED SUCCESSFULLY!")
+            logger.warning("=" * 60)
             for mode, metrics_file in results:
-                logger.info(f"  {mode}: {os.path.dirname(metrics_file)}")
-            logger.info("=" * 60)
+                logger.warning(f"  {mode}: {os.path.dirname(metrics_file)}")
+            logger.warning("=" * 60)
             
         else:
             # Run single mode benchmark
